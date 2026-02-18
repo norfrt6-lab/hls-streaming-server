@@ -8,8 +8,10 @@ import { errorHandler } from "./common/middleware/error-handler";
 import { authRoutes } from "./modules/auth/auth.routes";
 import { usersRoutes } from "./modules/users/users.routes";
 import { streamsRoutes } from "./modules/streams/streams.routes";
+import { chatAdminRoutes } from "./modules/chat/chat.routes";
 import { analyticsRoutes } from "./modules/analytics/analytics.routes";
 import { vodRoutes } from "./modules/vod/vod.routes";
+import { auditRoutes } from "./modules/audit/audit.routes";
 import { metricsRoutes } from "./services/metrics/metrics.routes";
 import { sendSuccess } from "./common/utils/response";
 
@@ -29,8 +31,10 @@ app.use("/media", express.static(config.media.root));
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", usersRoutes);
 app.use("/api/v1/streams", streamsRoutes);
+app.use("/api/v1/chat", chatAdminRoutes);
 app.use("/api/v1/analytics", analyticsRoutes);
 app.use("/api/v1/vod", vodRoutes);
+app.use("/api/v1/audit", auditRoutes);
 app.use(metricsRoutes);
 
 // Health check

@@ -39,7 +39,7 @@ const baseQueryWithReauth: BaseQueryFn<
           body: { refreshToken },
         },
         api,
-        extraOptions
+        extraOptions,
       );
 
       if (refreshResult.data) {
@@ -50,7 +50,7 @@ const baseQueryWithReauth: BaseQueryFn<
           setTokens({
             accessToken: data.data.accessToken,
             refreshToken: data.data.refreshToken,
-          })
+          }),
         );
         result = await rawBaseQuery(args, api, extraOptions);
       } else {
@@ -67,6 +67,15 @@ const baseQueryWithReauth: BaseQueryFn<
 export const baseApi = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["User", "Stream", "Analytics", "Chat", "Vod", "Users"],
+  tagTypes: [
+    "User",
+    "Stream",
+    "Analytics",
+    "Chat",
+    "Vod",
+    "Users",
+    "Bans",
+    "AuditLog",
+  ],
   endpoints: () => ({}),
 });

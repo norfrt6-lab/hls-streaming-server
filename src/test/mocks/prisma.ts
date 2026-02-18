@@ -20,6 +20,7 @@ export const prisma = {
   userBan: createModelMock(),
   viewerEvent: createModelMock(),
   recording: createModelMock(),
+  auditLog: createModelMock(),
   $transaction: vi.fn(),
   $connect: vi.fn(),
   $disconnect: vi.fn(),

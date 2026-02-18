@@ -59,6 +59,14 @@ export const streamsApi = baseApi.injectEndpoints({
       query: () => ({ url: "/streams", params: { status: "live" } }),
       providesTags: [{ type: "Stream", id: "LIVE" }],
     }),
+    forceStopStream: builder.mutation<ApiResponse<Stream>, string>({
+      query: (id) => ({ url: `/streams/${id}/stop`, method: "POST" }),
+      invalidatesTags: (_result, _error, id) => [
+        { type: "Stream", id },
+        { type: "Stream", id: "LIST" },
+        { type: "Stream", id: "LIVE" },
+      ],
+    }),
   }),
 });
 
@@ -71,4 +79,5 @@ export const {
   useGetStreamKeyQuery,
   useRegenerateStreamKeyMutation,
   useGetLiveStreamsQuery,
+  useForceStopStreamMutation,
 } = streamsApi;

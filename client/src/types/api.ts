@@ -78,6 +78,23 @@ export interface UserBan {
   user?: Pick<User, "id" | "username" | "displayName">;
 }
 
+export interface BanWithDetails extends UserBan {
+  issuer?: Pick<User, "id" | "username" | "displayName">;
+  stream?: Pick<Stream, "id" | "title">;
+}
+
+export interface AuditLog {
+  id: string;
+  userId: string;
+  action: string;
+  targetType: string;
+  targetId: string;
+  details: Record<string, unknown> | null;
+  ipAddress: string | null;
+  createdAt: string;
+  user?: Pick<User, "id" | "username" | "displayName">;
+}
+
 export interface Recording {
   id: string;
   sessionId: string;

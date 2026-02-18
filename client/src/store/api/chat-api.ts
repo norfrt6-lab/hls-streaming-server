@@ -2,6 +2,7 @@ import { baseApi } from "./base-api";
 import type {
   ApiResponse,
   BanUserRequest,
+  BanWithDetails,
   ChatMessage,
   PaginationParams,
   UserBan,
@@ -55,6 +56,13 @@ export const chatApi = baseApi.injectEndpoints({
         { type: "Chat", id: streamId },
       ],
     }),
+    getActiveBans: builder.query<
+      ApiResponse<BanWithDetails[]>,
+      PaginationParams & { search?: string }
+    >({
+      query: (params) => ({ url: "/chat/bans", params }),
+      providesTags: [{ type: "Bans", id: "LIST" }],
+    }),
   }),
 });
 
@@ -63,4 +71,5 @@ export const {
   useBanUserMutation,
   useUnbanUserMutation,
   useDeleteChatMessageMutation,
+  useGetActiveBansQuery,
 } = chatApi;

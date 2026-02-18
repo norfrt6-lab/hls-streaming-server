@@ -1,7 +1,11 @@
 import * as chatRepo from "./chat.repository";
+import * as auditService from "../audit/audit.service";
 import { AppError } from "../../common/utils/errors";
 
-export async function getMessages(streamId: string, params: { page: number; limit: number }) {
+export async function getMessages(
+  streamId: string,
+  params: { page: number; limit: number },
+) {
   const session = await chatRepo.getActiveSession(streamId);
   if (!session) {
     return { messages: [], total: 0 };
@@ -9,7 +13,11 @@ export async function getMessages(streamId: string, params: { page: number; limi
   return chatRepo.findMessages(session.id, params);
 }
 
-export async function sendMessage(streamId: string, userId: string, content: string) {
+export async function sendMessage(
+  streamId: string,
+  userId: string,
+  content: string,
+) {
   // Check if user is banned
   const ban = await chatRepo.findBan(streamId, userId);
   if (ban) {
@@ -30,8 +38,12 @@ export async function sendMessage(streamId: string, userId: string, content: str
   });
 }
 
-export async function deleteMessage(messageId: string) {
-  return chatRepo.deleteMessage(messageId);
+export async function deleteMessage(messageId: string, adminId?: string) {
+  const result = await chatRepo.deleteMessage(messageId);
+  if (adminId) {
+    await auditService.log(adminId, "MESSAGE_DELETED", "chat", messageId);
+  }
+  return result;
 }
 
 export async function banUser(
@@ -44,19 +56,44 @@ export async function banUser(
   const existing = await chatRepo.findBan(streamId, userId);
   if (existing) throw AppError.conflict("User is already banned");
 
-  return chatRepo.createBan({
+  const ban = await chatRepo.createBan({
     streamId,
     userId,
     bannedBy,
     reason,
     expiresAt: expiresAt ? new Date(expiresAt) : undefined,
   });
+
+  await auditService.log(bannedBy, "USER_BANNED", "chat", userId, {
+    streamId,
+    reason,
+    expiresAt,
+  });
+
+  return ban;
 }
 
-export async function unbanUser(streamId: string, userId: string) {
+export async function unbanUser(
+  streamId: string,
+  userId: string,
+  adminId?: string,
+) {
   try {
     await chatRepo.removeBan(streamId, userId);
   } catch {
     throw AppError.notFound("Ban not found");
   }
+  if (adminId) {
+    await auditService.log(adminId, "USER_UNBANNED", "chat", userId, {
+      streamId,
+    });
+  }
+}
+
+export async function listBans(params: {
+  page: number;
+  limit: number;
+  search?: string;
+}) {
+  return chatRepo.findAllBans(params);
 }
