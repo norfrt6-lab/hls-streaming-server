@@ -1,0 +1,60 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hls_streaming
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build: .
+    ports:
+      - "3000:3000"
+      - "1935:1935"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      RTMP_PORT: 1935
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/hls_streaming?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: change-this-in-production
+      JWT_EXPIRES_IN: 24h
+      JWT_REFRESH_EXPIRES_IN: 7d
+      FFMPEG_PATH: ffmpeg
+      MEDIA_ROOT: ./media
+      CORS_ORIGIN: "*"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - media-data:/app/media
+
+volumes:
+  postgres-data:
+  redis-data:
+  media-data:
