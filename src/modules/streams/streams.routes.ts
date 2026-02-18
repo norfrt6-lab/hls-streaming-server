@@ -10,6 +10,7 @@ import {
   deleteHandler,
   getKeyHandler,
   regenerateKeyHandler,
+  forceStopHandler,
 } from "./streams.controller";
 import { chatRestRoutes } from "../chat/chat.routes";
 
@@ -31,6 +32,9 @@ router.patch("/:id", authenticate, validate(updateStreamSchema), updateHandler);
 router.delete("/:id", authenticate, deleteHandler);
 router.get("/:id/key", authenticate, getKeyHandler);
 router.post("/:id/key", authenticate, regenerateKeyHandler);
+
+// Admin-only
+router.post("/:id/stop", authenticate, authorize("admin"), forceStopHandler);
 
 // Chat sub-routes: /streams/:id/chat
 router.use("/:id/chat", chatRestRoutes);

@@ -55,6 +55,7 @@ router.delete(
       await chatService.unbanUser(
         req.params.id as string,
         req.params.userId as string,
+        req.userId,
       );
       sendSuccess(res, null);
     } catch (err) {
@@ -69,7 +70,10 @@ router.delete(
   authenticate,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      await chatService.deleteMessage(req.params.messageId as string);
+      await chatService.deleteMessage(
+        req.params.messageId as string,
+        req.userId,
+      );
       sendSuccess(res, null);
     } catch (err) {
       next(err);
@@ -78,3 +82,30 @@ router.delete(
 );
 
 export { router as chatRestRoutes };
+
+// Admin-only ban management routes: /api/v1/chat/bans
+const adminRouter = Router();
+
+adminRouter.get(
+  "/bans",
+  authenticate,
+  authorize("admin"),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const search = req.query.search as string | undefined;
+
+      const { bans, total } = await chatService.listBans({
+        page,
+        limit,
+        search,
+      });
+      sendSuccess(res, bans, 200, paginate(page, limit, total));
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+export { adminRouter as chatAdminRoutes };

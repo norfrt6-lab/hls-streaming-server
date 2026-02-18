@@ -1,12 +1,20 @@
 import { prisma } from "../../config/database";
 
-export async function findMessages(sessionId: string, params: { page: number; limit: number }) {
+export async function findMessages(
+  sessionId: string,
+  params: { page: number; limit: number },
+) {
   const [messages, total] = await Promise.all([
     prisma.chatMessage.findMany({
       where: { sessionId, isDeleted: false },
       include: {
         user: {
-          select: { id: true, username: true, displayName: true, avatarUrl: true },
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            avatarUrl: true,
+          },
         },
       },
       skip: (params.page - 1) * params.limit,
@@ -19,12 +27,21 @@ export async function findMessages(sessionId: string, params: { page: number; li
   return { messages: messages.reverse(), total };
 }
 
-export async function createMessage(data: { sessionId: string; userId: string; content: string }) {
+export async function createMessage(data: {
+  sessionId: string;
+  userId: string;
+  content: string;
+}) {
   return prisma.chatMessage.create({
     data,
     include: {
       user: {
-        select: { id: true, username: true, displayName: true, avatarUrl: true },
+        select: {
+          id: true,
+          username: true,
+          displayName: true,
+          avatarUrl: true,
+        },
       },
     },
   });
@@ -69,4 +86,36 @@ export async function getActiveSession(streamId: string) {
     where: { streamId, status: "live" },
     orderBy: { startedAt: "desc" },
   });
+}
+
+export async function findAllBans(params: {
+  page: number;
+  limit: number;
+  search?: string;
+}) {
+  const where: any = {};
+
+  if (params.search) {
+    where.OR = [
+      { user: { username: { contains: params.search, mode: "insensitive" } } },
+      { stream: { title: { contains: params.search, mode: "insensitive" } } },
+    ];
+  }
+
+  const [bans, total] = await Promise.all([
+    prisma.userBan.findMany({
+      where,
+      include: {
+        user: { select: { id: true, username: true, displayName: true } },
+        issuer: { select: { id: true, username: true, displayName: true } },
+        stream: { select: { id: true, title: true } },
+      },
+      skip: (params.page - 1) * params.limit,
+      take: params.limit,
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.userBan.count({ where }),
+  ]);
+
+  return { bans, total };
 }

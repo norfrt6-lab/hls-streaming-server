@@ -5,6 +5,7 @@ import path from "path";
 export default defineConfig({
   plugins: [react()],
   root: path.resolve(__dirname),
+  // @ts-expect-error configFile is valid at runtime to prevent parent config inheritance
   configFile: false,
   test: {
     globals: true,

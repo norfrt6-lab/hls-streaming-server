@@ -4,19 +4,18 @@ import { useSelector, useDispatch } from "react-redux";
 import {
   LayoutDashboard,
   Radio,
-  BarChart3,
   Film,
   Users,
+  MonitorStop,
+  ShieldAlert,
+  ScrollText,
   Settings,
   ChevronsLeft,
   ChevronsRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NavItem } from "./nav-item";
-import {
-  selectSidebarCollapsed,
-  toggleSidebar,
-} from "@/store/slices/ui-slice";
+import { selectSidebarCollapsed, toggleSidebar } from "@/store/slices/ui-slice";
 import { selectUserRole } from "@/store/slices/auth-slice";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -29,6 +28,9 @@ const navigation = [
 
 const adminNavigation = [
   { href: "/users", icon: Users, label: "Users" },
+  { href: "/admin/streams", icon: MonitorStop, label: "Streams" },
+  { href: "/admin/moderation", icon: ShieldAlert, label: "Moderation" },
+  { href: "/admin/audit", icon: ScrollText, label: "Audit Log" },
 ];
 
 const bottomNavigation = [
@@ -44,10 +46,15 @@ export function Sidebar() {
     <aside
       className={cn(
         "flex h-screen flex-col border-r bg-card transition-all duration-200",
-        collapsed ? "w-16" : "w-60"
+        collapsed ? "w-16" : "w-60",
       )}
     >
-      <div className={cn("flex h-14 items-center border-b px-4", collapsed && "justify-center px-2")}>
+      <div
+        className={cn(
+          "flex h-14 items-center border-b px-4",
+          collapsed && "justify-center px-2",
+        )}
+      >
         {!collapsed && (
           <div className="flex items-center gap-2">
             <Radio className="h-5 w-5 text-primary" />
@@ -81,7 +88,10 @@ export function Sidebar() {
           variant="ghost"
           size="sm"
           onClick={() => dispatch(toggleSidebar())}
-          className={cn("w-full", collapsed ? "justify-center px-2" : "justify-start")}
+          className={cn(
+            "w-full",
+            collapsed ? "justify-center px-2" : "justify-start",
+          )}
         >
           {collapsed ? (
             <ChevronsRight className="h-4 w-4" />

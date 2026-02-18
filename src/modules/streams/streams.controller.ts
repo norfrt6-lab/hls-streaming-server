@@ -120,3 +120,19 @@ export async function regenerateKeyHandler(
     next(err);
   }
 }
+
+export async function forceStopHandler(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const stream = await streamsService.forceStopStream(
+      req.params.id as string,
+      req.userId,
+    );
+    sendSuccess(res, stream);
+  } catch (err) {
+    next(err);
+  }
+}

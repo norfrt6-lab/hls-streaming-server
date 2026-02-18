@@ -61,7 +61,7 @@ export async function deleteHandler(
   next: NextFunction,
 ) {
   try {
-    await usersService.deleteUser(req.params.id as string);
+    await usersService.deleteUser(req.params.id as string, req.userId);
     sendSuccess(res, null);
   } catch (err) {
     next(err);
@@ -77,6 +77,7 @@ export async function updateRoleHandler(
     const user = await usersService.updateRole(
       req.params.id as string,
       req.body,
+      req.userId,
     );
     sendSuccess(res, user);
   } catch (err) {
