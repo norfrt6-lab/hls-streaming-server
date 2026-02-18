@@ -35,11 +35,7 @@ export async function deleteUser(id: string, adminId?: string) {
   }
 }
 
-export async function updateRole(
-  id: string,
-  input: UpdateRoleInput,
-  adminId?: string,
-) {
+export async function updateRole(id: string, input: UpdateRoleInput, adminId?: string) {
   const user = await usersRepo.findById(id);
   if (!user) throw AppError.notFound("User not found");
   const updated = await usersRepo.update(id, { role: input.role });

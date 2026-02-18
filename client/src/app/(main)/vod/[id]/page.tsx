@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useGetRecordingQuery, useGetVodManifestQuery } from "@/store/api/vod-api";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { HlsPlayer } from "@/components/player/hls-player";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +37,9 @@ export default function VodDetailPage() {
 
       <div className="overflow-hidden rounded-lg bg-black">
         {manifestUrl ? (
-          <HlsPlayer src={manifestUrl} />
+          <ErrorBoundary>
+            <HlsPlayer src={manifestUrl} />
+          </ErrorBoundary>
         ) : (
           <div className="flex aspect-video items-center justify-center text-sm text-muted-foreground">
             VOD manifest not available

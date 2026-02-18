@@ -3,11 +3,7 @@ import * as vodService from "./vod.service";
 import { sendSuccess, paginate } from "../../common/utils/response";
 import type { AuthRequest } from "../auth/auth.middleware";
 
-export async function listHandler(
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-) {
+export async function listHandler(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
@@ -24,11 +20,7 @@ export async function listHandler(
   }
 }
 
-export async function getHandler(
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-) {
+export async function getHandler(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const recording = await vodService.getRecording(req.params.id as string);
     sendSuccess(res, recording);
@@ -37,11 +29,7 @@ export async function getHandler(
   }
 }
 
-export async function deleteHandler(
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-) {
+export async function deleteHandler(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     await vodService.deleteRecording(req.params.id as string);
     sendSuccess(res, null);
@@ -50,11 +38,7 @@ export async function deleteHandler(
   }
 }
 
-export async function manifestHandler(
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-) {
+export async function manifestHandler(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const manifest = await vodService.getManifest(req.params.id as string);
     sendSuccess(res, manifest);

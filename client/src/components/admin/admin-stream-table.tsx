@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 import { MoreHorizontal, StopCircle, Trash2 } from "lucide-react";
-import {
-  useGetStreamsQuery,
-  useDeleteStreamMutation,
-} from "@/store/api/streams-api";
+import { useGetStreamsQuery, useDeleteStreamMutation } from "@/store/api/streams-api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -166,10 +163,7 @@ export function AdminStreamTable({ search, statusFilter }: AdminStreamTableProps
         </div>
       )}
 
-      <ForceStopDialog
-        stream={stopDialogStream}
-        onClose={() => setStopDialogStream(null)}
-      />
+      <ForceStopDialog stream={stopDialogStream} onClose={() => setStopDialogStream(null)} />
     </>
   );
 }

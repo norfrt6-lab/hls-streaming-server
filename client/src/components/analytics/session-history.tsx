@@ -42,15 +42,11 @@ export function SessionHistory({ streamId }: SessionHistoryProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-medium">
-          Session History ({sessions.length})
-        </CardTitle>
+        <CardTitle className="text-sm font-medium">Session History ({sessions.length})</CardTitle>
       </CardHeader>
       <CardContent>
         {sessions.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            No past sessions found.
-          </p>
+          <p className="py-8 text-center text-sm text-muted-foreground">No past sessions found.</p>
         ) : (
           <Table>
             <TableHeader>
@@ -75,17 +71,11 @@ export function SessionHistory({ streamId }: SessionHistoryProps) {
                     })}
                   </TableCell>
                   <TableCell className="text-right text-muted-foreground">
-                    {session.durationSeconds
-                      ? formatDuration(session.durationSeconds)
-                      : "—"}
+                    {session.durationSeconds ? formatDuration(session.durationSeconds) : "—"}
                   </TableCell>
-                  <TableCell className="text-right">
-                    {session.peakViewers}
-                  </TableCell>
+                  <TableCell className="text-right">{session.peakViewers}</TableCell>
                   <TableCell className="text-right text-muted-foreground">
-                    {session.avgBitrate
-                      ? `${Math.round(session.avgBitrate / 1000)}k`
-                      : "—"}
+                    {session.avgBitrate ? `${Math.round(session.avgBitrate / 1000)}k` : "—"}
                   </TableCell>
                   <TableCell>
                     <Badge

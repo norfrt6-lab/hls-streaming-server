@@ -16,12 +16,7 @@ export function sendSuccess<T>(res: Response, data: T, status = 200, meta?: Pagi
   return res.status(status).json(body);
 }
 
-export function sendError(
-  res: Response,
-  code: string,
-  message: string,
-  status: number,
-) {
+export function sendError(res: Response, code: string, message: string, status: number) {
   return res.status(status).json({
     success: false,
     error: { code, message, status },

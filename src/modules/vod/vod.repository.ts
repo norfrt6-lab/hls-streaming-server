@@ -13,11 +13,7 @@ const vodInclude = {
   },
 };
 
-export async function findMany(params: {
-  page: number;
-  limit: number;
-  search?: string;
-}) {
+export async function findMany(params: { page: number; limit: number; search?: string }) {
   const where: Prisma.RecordingWhereInput = { status: "ready" };
 
   if (params.search) {

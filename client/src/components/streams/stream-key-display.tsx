@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 import { Copy, Eye, EyeOff, RefreshCw } from "lucide-react";
-import {
-  useGetStreamKeyQuery,
-  useRegenerateStreamKeyMutation,
-} from "@/store/api/streams-api";
+import { useGetStreamKeyQuery, useRegenerateStreamKeyMutation } from "@/store/api/streams-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,13 +14,13 @@ interface StreamKeyDisplayProps {
 
 export function StreamKeyDisplay({ streamId }: StreamKeyDisplayProps) {
   const [visible, setVisible] = useState(false);
+  const [localKey, setLocalKey] = useState<string | null>(null);
   const { toast } = useToast();
 
   const { data } = useGetStreamKeyQuery(streamId);
-  const [regenerateKey, { isLoading: isRegenerating }] =
-    useRegenerateStreamKeyMutation();
+  const [regenerateKey, { isLoading: isRegenerating }] = useRegenerateStreamKeyMutation();
 
-  const streamKey = data?.data?.streamKey ?? "";
+  const streamKey = localKey ?? data?.data?.streamKey ?? "";
 
   const handleCopy = async () => {
     if (!streamKey) return;
@@ -41,12 +38,14 @@ export function StreamKeyDisplay({ streamId }: StreamKeyDisplayProps) {
 
   const handleRegenerate = async () => {
     const confirmed = window.confirm(
-      "Are you sure you want to regenerate your stream key? Your current key will stop working immediately."
+      "Are you sure you want to regenerate your stream key? Your current key will stop working immediately.",
     );
     if (!confirmed) return;
 
     try {
-      await regenerateKey(streamId).unwrap();
+      const result = await regenerateKey(streamId).unwrap();
+      setLocalKey(result.data?.streamKey ?? null);
+      setVisible(true);
       toast({ title: "Stream key regenerated successfully" });
     } catch {
       toast({
@@ -75,11 +74,7 @@ export function StreamKeyDisplay({ streamId }: StreamKeyDisplayProps) {
             className="absolute right-0 top-0 h-full"
             onClick={() => setVisible(!visible)}
           >
-            {visible ? (
-              <EyeOff className="h-4 w-4" />
-            ) : (
-              <Eye className="h-4 w-4" />
-            )}
+            {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </Button>
         </div>
         <Button
@@ -99,14 +94,11 @@ export function StreamKeyDisplay({ streamId }: StreamKeyDisplayProps) {
           disabled={isRegenerating}
           title="Regenerate stream key"
         >
-          <RefreshCw
-            className={`h-4 w-4 ${isRegenerating ? "animate-spin" : ""}`}
-          />
+          <RefreshCw className={`h-4 w-4 ${isRegenerating ? "animate-spin" : ""}`} />
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">
-        Keep your stream key private. Anyone with this key can stream to your
-        channel.
+        Keep your stream key private. Anyone with this key can stream to your channel.
       </p>
     </div>
   );

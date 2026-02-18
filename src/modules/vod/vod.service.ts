@@ -1,11 +1,7 @@
 import * as vodRepo from "./vod.repository";
 import { AppError } from "../../common/utils/errors";
 
-export async function listRecordings(params: {
-  page: number;
-  limit: number;
-  search?: string;
-}) {
+export async function listRecordings(params: { page: number; limit: number; search?: string }) {
   return vodRepo.findMany(params);
 }
 

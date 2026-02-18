@@ -13,9 +13,7 @@ export default function StreamAnalyticsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Stream Analytics</h1>
-        <p className="text-sm text-muted-foreground">
-          Performance metrics and viewer history
-        </p>
+        <p className="text-sm text-muted-foreground">Performance metrics and viewer history</p>
       </div>
 
       <StreamSummary streamId={streamId} />

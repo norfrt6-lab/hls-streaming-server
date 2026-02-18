@@ -5,7 +5,7 @@ import { config } from "../../config";
 import { logger } from "../../common/utils/logger";
 import { presets } from "./transcoder.presets";
 
-const activeProcesses = new Map<string, ChildProcess>();
+const activeProcesses = new Map<string, ChildProcess[]>();
 
 function buildMasterPlaylist(streamId: string) {
   const outputDir = path.join(config.media.root, "live", streamId);
@@ -25,66 +25,129 @@ export function startTranscoding(streamId: string, streamKey: string) {
 
   // Create output directories for each quality
   for (const preset of presets) {
-    fs.mkdirSync(path.join(outputDir, String(preset.index)), { recursive: true });
+    fs.mkdirSync(path.join(outputDir, String(preset.index)), {
+      recursive: true,
+    });
   }
 
   // Build master playlist
   buildMasterPlaylist(streamId);
 
-  // Build FFmpeg arguments
-  const inputUrl = `rtmp://localhost:${config.rtmpPort}/live/${streamKey}`;
-  const args: string[] = [
-    "-i", inputUrl,
-    "-loglevel", "warning",
-  ];
+  // Use HTTP-FLV from NMS internal server for reliable stream reading
+  const inputUrl = `http://localhost:8888/live/${streamKey}.flv`;
+  const processes: ChildProcess[] = [];
 
+  // Spawn one FFmpeg process per quality preset
   for (const preset of presets) {
     const outPath = path.join(outputDir, String(preset.index));
-    args.push(
-      "-map", "0:v:0", "-map", "0:a:0",
-      `-c:v`, "libx264",
-      `-b:v`, preset.videoBitrate,
-      `-s`, `${preset.width}x${preset.height}`,
-      `-preset`, "veryfast",
-      `-g`, "48",
-      `-keyint_min`, "48",
-      `-sc_threshold`, "0",
-      `-c:a`, "aac",
-      `-b:a`, preset.audioBitrate,
-      `-f`, "hls",
-      `-hls_time`, String(config.media.hlsSegmentDuration),
-      `-hls_list_size`, String(config.media.hlsPlaylistSize),
-      `-hls_flags`, "delete_segments+append_list",
-      `-hls_segment_filename`, path.join(outPath, "segment_%03d.ts"),
-      path.join(outPath, "playlist.m3u8"),
+    const segmentPath = path.join(outPath, "segment_%03d.ts").replace(/\\/g, "/");
+    const playlistPath = path.join(outPath, "playlist.m3u8").replace(/\\/g, "/");
+
+    const args: string[] = [
+      "-rw_timeout",
+      "5000000",
+      "-i",
+      inputUrl,
+      "-loglevel",
+      "info",
+      "-vf",
+      `scale=${preset.width}:${preset.height}`,
+      "-c:v",
+      "libx264",
+      "-b:v",
+      preset.videoBitrate,
+      "-preset",
+      "veryfast",
+      "-g",
+      "48",
+      "-keyint_min",
+      "48",
+      "-sc_threshold",
+      "0",
+      "-c:a",
+      "aac",
+      "-b:a",
+      preset.audioBitrate,
+      "-f",
+      "hls",
+      "-hls_time",
+      String(config.media.hlsSegmentDuration),
+      "-hls_list_size",
+      String(config.media.hlsPlaylistSize),
+      "-hls_flags",
+      "delete_segments+append_list",
+      "-hls_segment_filename",
+      segmentPath,
+      playlistPath,
+    ];
+
+    logger.info(
+      { streamId, preset: preset.name, cmd: config.ffmpeg.path, args },
+      "Spawning FFmpeg transcoder",
     );
+
+    const ffmpeg = spawn(config.ffmpeg.path, args, {
+      windowsHide: true,
+    });
+    processes.push(ffmpeg);
+
+    ffmpeg.stdout?.on("data", (data: Buffer) => {
+      const msg = data.toString().trim();
+      if (msg) logger.info({ streamId, preset: preset.name }, `FFmpeg stdout: ${msg}`);
+    });
+
+    ffmpeg.stderr?.on("data", (data: Buffer) => {
+      const msg = data.toString().trim();
+      if (msg) logger.info({ streamId, preset: preset.name }, `FFmpeg: ${msg}`);
+    });
+
+    ffmpeg.on("exit", (code, signal) => {
+      logger.info({ streamId, preset: preset.name, code, signal }, "FFmpeg process exited");
+    });
+
+    ffmpeg.on("error", (err) => {
+      logger.error({ err, streamId, preset: preset.name }, "FFmpeg process error");
+    });
   }
 
-  const ffmpeg = spawn(config.ffmpeg.path, args);
-  activeProcesses.set(streamId, ffmpeg);
-
-  ffmpeg.stderr?.on("data", (data: Buffer) => {
-    const msg = data.toString().trim();
-    if (msg) logger.debug({ streamId }, `FFmpeg: ${msg}`);
-  });
-
-  ffmpeg.on("exit", (code) => {
-    activeProcesses.delete(streamId);
-    logger.info({ streamId, code }, "FFmpeg process exited");
-  });
-
-  ffmpeg.on("error", (err) => {
-    activeProcesses.delete(streamId);
-    logger.error({ err, streamId }, "FFmpeg process error");
-  });
-
-  logger.info({ streamId }, "Transcoding started");
+  activeProcesses.set(streamId, processes);
+  logger.info({ streamId }, "Transcoding started for all variants");
 }
 
 export function stopTranscoding(streamId: string) {
-  const proc = activeProcesses.get(streamId);
-  if (proc) {
-    proc.kill("SIGTERM");
+  const procs = activeProcesses.get(streamId);
+  if (procs) {
+    for (const proc of procs) {
+      if (proc.exitCode !== null) continue; // already exited
+
+      // Send 'q' + end stdin for graceful FFmpeg shutdown
+      try {
+        proc.stdin?.write("q\n");
+        proc.stdin?.end();
+      } catch {
+        // stdin may not be writable
+      }
+
+      // Force kill after 3 seconds if still alive
+      const pid = proc.pid;
+      setTimeout(() => {
+        try {
+          if (proc.exitCode === null && pid) {
+            // On Windows, proc.kill() sends SIGTERM which doesn't work.
+            // Use taskkill to forcefully terminate the process tree.
+            if (process.platform === "win32") {
+              spawn("taskkill", ["/F", "/T", "/PID", String(pid)], {
+                windowsHide: true,
+              });
+            } else {
+              proc.kill("SIGKILL");
+            }
+          }
+        } catch {
+          // process may already be dead
+        }
+      }, 3000);
+    }
     activeProcesses.delete(streamId);
     logger.info({ streamId }, "Transcoding stopped");
   }
@@ -92,4 +155,10 @@ export function stopTranscoding(streamId: string) {
 
 export function getActiveTranscodings(): string[] {
   return Array.from(activeProcesses.keys());
+}
+
+export function stopAllTranscodings() {
+  for (const streamId of activeProcesses.keys()) {
+    stopTranscoding(streamId);
+  }
 }

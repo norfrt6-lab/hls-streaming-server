@@ -19,10 +19,14 @@ function captureThumbnail(streamId: string) {
 
   const args = [
     "-y",
-    "-i", hlsInput,
-    "-vframes", "1",
-    "-q:v", "5",
-    "-vf", "scale=640:-1",
+    "-i",
+    hlsInput,
+    "-vframes",
+    "1",
+    "-q:v",
+    "5",
+    "-vf",
+    "scale=640:-1",
     outputPath,
   ];
 
@@ -52,10 +56,7 @@ export function startThumbnailCapture(streamId: string) {
   setTimeout(() => captureThumbnail(streamId), 15000);
 
   // Periodic capture
-  const interval = setInterval(
-    () => captureThumbnail(streamId),
-    config.thumbnails.interval * 1000,
-  );
+  const interval = setInterval(() => captureThumbnail(streamId), config.thumbnails.interval * 1000);
   activeIntervals.set(streamId, interval);
 
   logger.info({ streamId, interval: config.thumbnails.interval }, "Thumbnail capture started");
@@ -68,4 +69,12 @@ export function stopThumbnailCapture(streamId: string) {
     activeIntervals.delete(streamId);
     logger.info({ streamId }, "Thumbnail capture stopped");
   }
+}
+
+export function stopAllThumbnailCaptures() {
+  for (const [streamId, interval] of activeIntervals.entries()) {
+    clearInterval(interval);
+    logger.info({ streamId }, "Thumbnail capture stopped (shutdown)");
+  }
+  activeIntervals.clear();
 }

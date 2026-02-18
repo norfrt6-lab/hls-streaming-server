@@ -37,10 +37,8 @@ export function ForceStopDialog({ stream, onClose }: ForceStopDialogProps) {
           <DialogTitle>Force Stop Stream</DialogTitle>
           <DialogDescription>
             Are you sure you want to force stop{" "}
-            <span className="font-medium text-foreground">
-              {stream?.title}
-            </span>
-            ? This will immediately disconnect the streamer and end the session.
+            <span className="font-medium text-foreground">{stream?.title}</span>? This will
+            immediately disconnect the streamer and end the session.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

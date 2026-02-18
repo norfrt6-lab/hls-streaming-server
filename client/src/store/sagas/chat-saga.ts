@@ -1,4 +1,4 @@
-import { put, takeEvery, delay, select } from "redux-saga/effects";
+import { put, takeEvery, takeLatest, delay, select } from "redux-saga/effects";
 import { setSendingMessage, setRateLimited } from "@/store/slices/chat-slice";
 import { SOCKET_SEND_CHAT_MESSAGE } from "@/types/socket";
 import type { RootState } from "@/store";
@@ -13,9 +13,12 @@ function* handleSendMessage(): Generator {
 }
 
 function* handleRateLimitCooldown(): Generator {
-  const retryAfter = (yield select(
-    (s: RootState) => s.chat.rateLimitRetryAfter
-  )) as number | null;
+  const limited = (yield select((s: RootState) => s.chat.rateLimited)) as boolean;
+
+  // Only run cooldown when rate limit is activated, not when cleared
+  if (!limited) return;
+
+  const retryAfter = (yield select((s: RootState) => s.chat.rateLimitRetryAfter)) as number | null;
 
   if (retryAfter) {
     yield delay(retryAfter * 1000);
@@ -25,5 +28,5 @@ function* handleRateLimitCooldown(): Generator {
 
 export default function* chatSaga(): Generator {
   yield takeEvery(SOCKET_SEND_CHAT_MESSAGE, handleSendMessage);
-  yield takeEvery(setRateLimited.type, handleRateLimitCooldown);
+  yield takeLatest(setRateLimited.type, handleRateLimitCooldown);
 }

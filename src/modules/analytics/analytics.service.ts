@@ -7,17 +7,11 @@ export async function getStreamSummary(streamId: string) {
   return analyticsRepo.getStreamSummary(streamId);
 }
 
-export async function getViewerEvents(
-  streamId: string,
-  params: { page: number; limit: number },
-) {
+export async function getViewerEvents(streamId: string, params: { page: number; limit: number }) {
   return analyticsRepo.getViewerEvents(streamId, params);
 }
 
-export async function getStreamSessions(
-  streamId: string,
-  params: { page: number; limit: number },
-) {
+export async function getStreamSessions(streamId: string, params: { page: number; limit: number }) {
   return analyticsRepo.getStreamSessions(streamId, params);
 }
 
@@ -42,12 +36,7 @@ export async function getDashboardMetrics() {
   const totalIdle = cpus.reduce((acc, cpu) => acc + cpu.times.idle, 0);
   const totalTick = cpus.reduce(
     (acc, cpu) =>
-      acc +
-      cpu.times.user +
-      cpu.times.nice +
-      cpu.times.sys +
-      cpu.times.idle +
-      cpu.times.irq,
+      acc + cpu.times.user + cpu.times.nice + cpu.times.sys + cpu.times.idle + cpu.times.irq,
     0,
   );
   const cpuUsage = 100 - (totalIdle / totalTick) * 100;

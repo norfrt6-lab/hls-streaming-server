@@ -26,26 +26,14 @@ export function StreamSummary({ streamId }: StreamSummaryProps) {
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <StatCard
-        label="Total Sessions"
-        value={summary.totalSessions}
-        icon={BarChart3}
-      />
+      <StatCard label="Total Sessions" value={summary.totalSessions} icon={BarChart3} />
       <StatCard
         label="Total Watch Hours"
         value={`${summary.totalWatchHours.toFixed(1)}h`}
         icon={Clock}
       />
-      <StatCard
-        label="Avg Viewers"
-        value={formatNumber(summary.avgViewers)}
-        icon={Eye}
-      />
-      <StatCard
-        label="Peak Viewers"
-        value={formatNumber(summary.peakViewers)}
-        icon={TrendingUp}
-      />
+      <StatCard label="Avg Viewers" value={formatNumber(summary.avgViewers)} icon={Eye} />
+      <StatCard label="Peak Viewers" value={formatNumber(summary.peakViewers)} icon={TrendingUp} />
     </div>
   );
 }

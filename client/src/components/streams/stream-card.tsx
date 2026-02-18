@@ -14,13 +14,10 @@ interface StreamCardProps {
   stream: Stream;
 }
 
-export const StreamCard = memo(function StreamCard({
-  stream,
-}: StreamCardProps) {
+export const StreamCard = memo(function StreamCard({ stream }: StreamCardProps) {
   const router = useRouter();
 
-  const displayName =
-    stream.user?.displayName ?? stream.user?.username ?? "Unknown";
+  const displayName = stream.user?.displayName ?? stream.user?.username ?? "Unknown";
 
   return (
     <Card

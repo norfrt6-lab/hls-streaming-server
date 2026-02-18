@@ -35,7 +35,7 @@ export function ChatInput({ streamId }: ChatInputProps) {
   return (
     <div className="border-t px-3 py-2">
       {rateLimited && (
-        <p className="mb-1 text-xs text-destructive">
+        <p role="alert" className="mb-1 text-xs text-destructive">
           Slow down! Try again{retryAfter ? ` in ${retryAfter}s` : " shortly"}.
         </p>
       )}
@@ -44,6 +44,7 @@ export function ChatInput({ streamId }: ChatInputProps) {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Send a message..."
+          aria-label="Chat message"
           disabled={isDisabled}
           className="h-8 text-xs"
           maxLength={500}

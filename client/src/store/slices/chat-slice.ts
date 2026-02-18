@@ -35,15 +35,12 @@ const chatSlice = createSlice({
     },
     setHistory(
       state,
-      action: PayloadAction<{ streamId: string; messages: ChatMessageReceived[] }>
+      action: PayloadAction<{ streamId: string; messages: ChatMessageReceived[] }>,
     ) {
       const { streamId, messages } = action.payload;
       state.rooms[streamId] = { messages, isLoading: false };
     },
-    addMessage(
-      state,
-      action: PayloadAction<{ streamId: string; message: ChatMessageReceived }>
-    ) {
+    addMessage(state, action: PayloadAction<{ streamId: string; message: ChatMessageReceived }>) {
       const { streamId, message } = action.payload;
       if (!state.rooms[streamId]) {
         state.rooms[streamId] = { messages: [], isLoading: false };
@@ -53,10 +50,7 @@ const chatSlice = createSlice({
         state.rooms[streamId].messages.shift();
       }
     },
-    removeMessage(
-      state,
-      action: PayloadAction<{ streamId: string; messageId: string }>
-    ) {
+    removeMessage(state, action: PayloadAction<{ streamId: string; messageId: string }>) {
       const { streamId, messageId } = action.payload;
       const room = state.rooms[streamId];
       if (room) {
@@ -67,10 +61,7 @@ const chatSlice = createSlice({
       delete state.rooms[action.payload];
       delete state.typingUsers[action.payload];
     },
-    setTypingUser(
-      state,
-      action: PayloadAction<{ streamId: string; username: string }>
-    ) {
+    setTypingUser(state, action: PayloadAction<{ streamId: string; username: string }>) {
       const { streamId, username } = action.payload;
       if (!state.typingUsers[streamId]) {
         state.typingUsers[streamId] = [];
@@ -79,24 +70,16 @@ const chatSlice = createSlice({
         state.typingUsers[streamId].push(username);
       }
     },
-    removeTypingUser(
-      state,
-      action: PayloadAction<{ streamId: string; username: string }>
-    ) {
+    removeTypingUser(state, action: PayloadAction<{ streamId: string; username: string }>) {
       const { streamId, username } = action.payload;
       if (state.typingUsers[streamId]) {
-        state.typingUsers[streamId] = state.typingUsers[streamId].filter(
-          (u) => u !== username
-        );
+        state.typingUsers[streamId] = state.typingUsers[streamId].filter((u) => u !== username);
       }
     },
     setSendingMessage(state, action: PayloadAction<boolean>) {
       state.sendingMessage = action.payload;
     },
-    setRateLimited(
-      state,
-      action: PayloadAction<{ limited: boolean; retryAfter: number | null }>
-    ) {
+    setRateLimited(state, action: PayloadAction<{ limited: boolean; retryAfter: number | null }>) {
       state.rateLimited = action.payload.limited;
       state.rateLimitRetryAfter = action.payload.retryAfter;
     },

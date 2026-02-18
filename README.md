@@ -7,7 +7,7 @@
 ![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-A production-grade live video streaming server with RTMP ingest, FFmpeg adaptive bitrate transcoding, HLS delivery, real-time chat, viewer analytics, VOD recording, and a monitoring stack. Built as a senior project to demonstrate expertise in system design, real-time communication, media processing, and containerized deployment.
+A production-grade live video streaming server with RTMP ingest, FFmpeg adaptive bitrate transcoding, HLS delivery, real-time chat, viewer analytics, VOD recording, and a monitoring stack. Built as a project to demonstrate expertise in system design, real-time communication, media processing, and containerized deployment.
 
 ---
 
@@ -431,6 +431,16 @@ npx prisma db seed
 # Start in development mode
 pnpm dev
 ```
+
+### Default Credentials
+
+After seeding the database, the following accounts are available:
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@hls-stream.local` | `admin123` |
+| Streamer | `streamer@hls-stream.local` | `streamer123` |
+| Viewer | `viewer@hls-stream.local` | `viewer123` |
 
 ### Start Streaming
 

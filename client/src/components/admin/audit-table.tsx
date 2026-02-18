@@ -93,10 +93,7 @@ export function AuditTable({ actionFilter }: AuditTableProps) {
                     {log.user?.displayName ?? log.user?.username ?? log.userId}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant={ACTION_VARIANTS[log.action] ?? "outline"}
-                      className="text-xs"
-                    >
+                    <Badge variant={ACTION_VARIANTS[log.action] ?? "outline"} className="text-xs">
                       {ACTION_LABELS[log.action] ?? log.action}
                     </Badge>
                   </TableCell>

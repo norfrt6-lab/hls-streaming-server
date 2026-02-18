@@ -18,15 +18,11 @@ const rootReducer = combineReducers({
   player: playerReducer,
 });
 
-function createTestStore(
-  preloadedState?: Partial<ReturnType<typeof rootReducer>>,
-) {
+function createTestStore(preloadedState?: Partial<ReturnType<typeof rootReducer>>) {
   return configureStore({
     reducer: rootReducer,
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware({ serializableCheck: false }).concat(
-        baseApi.middleware,
-      ),
+      getDefaultMiddleware({ serializableCheck: false }).concat(baseApi.middleware),
     preloadedState,
   });
 }

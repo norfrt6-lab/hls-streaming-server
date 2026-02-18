@@ -9,6 +9,17 @@ let nms: NodeMediaServer;
 // Map RTMP session IDs to stream IDs for cleanup
 const sessionStreamMap = new Map<string, string>();
 
+// Track streams that were force-stopped so donePublish doesn't double-process
+const forceStoppedStreams = new Set<string>();
+
+export function isForceStoppedStream(streamId: string): boolean {
+  return forceStoppedStreams.has(streamId);
+}
+
+export function clearForceStoppedFlag(streamId: string) {
+  forceStoppedStreams.delete(streamId);
+}
+
 export function setupRtmpServer() {
   const nmsConfig = {
     rtmp: {
@@ -19,7 +30,7 @@ export function setupRtmpServer() {
       ping_timeout: 60,
     },
     http: {
-      port: 0, // Disable NMS built-in HTTP (we use Express)
+      port: 8888, // Internal HTTP-FLV port for transcoder to read streams
       allow_origin: "*",
     },
   };
@@ -72,4 +83,29 @@ export function setupRtmpServer() {
 
   nms.run();
   logger.info(`RTMP server listening on port ${config.rtmpPort}`);
+}
+
+export function disconnectRtmpSession(streamId: string) {
+  // Mark as force-stopped so donePublish won't double-process
+  forceStoppedStreams.add(streamId);
+
+  // Auto-clear the flag after 30 seconds to prevent leaks
+  setTimeout(() => forceStoppedStreams.delete(streamId), 30000);
+
+  for (const [sessionId, sId] of sessionStreamMap.entries()) {
+    if (sId === streamId) {
+      const session = nms.getSession(sessionId);
+      if (session) {
+        try {
+          session.reject();
+          logger.info({ streamId, sessionId }, "RTMP session disconnected");
+        } catch (err) {
+          logger.error({ streamId, sessionId, err }, "Failed to reject RTMP session");
+        }
+      }
+      sessionStreamMap.delete(sessionId);
+      return;
+    }
+  }
+  logger.warn({ streamId }, "No active RTMP session found for stream");
 }

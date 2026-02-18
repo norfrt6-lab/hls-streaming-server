@@ -1,6 +1,7 @@
 import type { Namespace, Socket } from "socket.io";
 import { redis } from "../../config/redis";
 import { logger } from "../../common/utils/logger";
+import { totalViewersGauge } from "../metrics/metrics.service";
 
 // Track viewer counts in Redis
 const VIEWERS_KEY = (streamId: string) => `viewers:${streamId}`;
@@ -18,6 +19,9 @@ async function decrementViewers(streamsNsp: Namespace, streamId: string) {
     count: safeCount,
     peak,
   });
+
+  // Update Prometheus gauge
+  totalViewersGauge.dec();
 }
 
 export function setupStreamsNamespace(streamsNsp: Namespace) {
@@ -42,6 +46,9 @@ export function setupStreamsNamespace(streamsNsp: Namespace) {
         count,
         peak: Math.max(count, peak),
       });
+
+      // Update Prometheus gauge
+      totalViewersGauge.inc();
     });
 
     socket.on("stream:leave", async ({ streamId }: { streamId: string }) => {
@@ -56,10 +63,7 @@ export function setupStreamsNamespace(streamsNsp: Namespace) {
         await decrementViewers(streamsNsp, streamId);
       }
       joinedStreams.clear();
-      logger.debug(
-        { socketId: socket.id },
-        "Viewer disconnected from streams namespace",
-      );
+      logger.debug({ socketId: socket.id }, "Viewer disconnected from streams namespace");
     });
   });
 }
@@ -79,10 +83,7 @@ export async function emitStreamLive(
   streamsNsp.emit("stream:live", data);
 }
 
-export async function emitStreamOffline(
-  streamsNsp: Namespace,
-  streamId: string,
-) {
+export async function emitStreamOffline(streamsNsp: Namespace, streamId: string) {
   await redis.del(VIEWERS_KEY(streamId));
   await redis.del(PEAK_KEY(streamId));
   streamsNsp.emit("stream:offline", { streamId });

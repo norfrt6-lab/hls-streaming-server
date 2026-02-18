@@ -1,9 +1,6 @@
 import { prisma } from "../../config/database";
 
-export async function findMessages(
-  sessionId: string,
-  params: { page: number; limit: number },
-) {
+export async function findMessages(sessionId: string, params: { page: number; limit: number }) {
   const [messages, total] = await Promise.all([
     prisma.chatMessage.findMany({
       where: { sessionId, isDeleted: false },
@@ -27,11 +24,7 @@ export async function findMessages(
   return { messages: messages.reverse(), total };
 }
 
-export async function createMessage(data: {
-  sessionId: string;
-  userId: string;
-  content: string;
-}) {
+export async function createMessage(data: { sessionId: string; userId: string; content: string }) {
   return prisma.chatMessage.create({
     data,
     include: {
@@ -88,11 +81,7 @@ export async function getActiveSession(streamId: string) {
   });
 }
 
-export async function findAllBans(params: {
-  page: number;
-  limit: number;
-  search?: string;
-}) {
+export async function findAllBans(params: { page: number; limit: number; search?: string }) {
   const where: any = {};
 
   if (params.search) {

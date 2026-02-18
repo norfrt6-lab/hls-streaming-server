@@ -12,7 +12,7 @@ export const streamsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getStreams: builder.query<
       ApiResponse<Stream[]>,
-      PaginationParams & { status?: string; search?: string }
+      PaginationParams & { status?: string; search?: string; userId?: string }
     >({
       query: (params) => ({ url: "/streams", params }),
       providesTags: (result) =>
@@ -31,10 +31,7 @@ export const streamsApi = baseApi.injectEndpoints({
       query: (body) => ({ url: "/streams", method: "POST", body }),
       invalidatesTags: [{ type: "Stream", id: "LIST" }],
     }),
-    updateStream: builder.mutation<
-      ApiResponse<Stream>,
-      { id: string; body: StreamUpdateRequest }
-    >({
+    updateStream: builder.mutation<ApiResponse<Stream>, { id: string; body: StreamUpdateRequest }>({
       query: ({ id, body }) => ({
         url: `/streams/${id}`,
         method: "PATCH",
@@ -49,10 +46,7 @@ export const streamsApi = baseApi.injectEndpoints({
     getStreamKey: builder.query<ApiResponse<{ streamKey: string }>, string>({
       query: (id) => `/streams/${id}/key`,
     }),
-    regenerateStreamKey: builder.mutation<
-      ApiResponse<{ streamKey: string }>,
-      string
-    >({
+    regenerateStreamKey: builder.mutation<ApiResponse<{ streamKey: string }>, string>({
       query: (id) => ({ url: `/streams/${id}/key`, method: "POST" }),
     }),
     getLiveStreams: builder.query<ApiResponse<Stream[]>, void>({

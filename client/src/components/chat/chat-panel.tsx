@@ -37,7 +37,7 @@ export function ChatPanel({ streamId }: ChatPanelProps) {
       <ChatHeader streamId={streamId} />
 
       <ScrollArea className="flex-1">
-        <div className="py-2">
+        <div role="log" aria-live="polite" aria-label="Chat messages" className="py-2">
           {isLoading ? (
             <div className="space-y-3 px-3">
               {Array.from({ length: 5 }).map((_, i) => (

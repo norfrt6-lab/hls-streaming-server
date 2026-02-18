@@ -46,11 +46,7 @@ export function Topbar() {
 
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" onClick={handleThemeToggle}>
-          {theme === "dark" ? (
-            <Sun className="h-4 w-4" />
-          ) : (
-            <Moon className="h-4 w-4" />
-          )}
+          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </Button>
 
         <DropdownMenu>
@@ -61,9 +57,7 @@ export function Topbar() {
                 <AvatarFallback className="text-xs">{initials}</AvatarFallback>
               </Avatar>
               {user && (
-                <span className="text-sm font-medium">
-                  {user.displayName ?? user.username}
-                </span>
+                <span className="text-sm font-medium">{user.displayName ?? user.username}</span>
               )}
             </Button>
           </DropdownMenuTrigger>

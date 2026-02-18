@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Radio } from "lucide-react";
 import { useLoginMutation } from "@/store/api/auth-api";
 import { setCredentials } from "@/store/slices/auth-slice";
@@ -19,31 +21,46 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+const loginSchema = z.object({
+  email: z.string().min(1, "Email is required").email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+type LoginValues = z.infer<typeof loginSchema>;
+
 export function LoginForm() {
   const router = useRouter();
   const dispatch = useDispatch();
   const [login, { isLoading }] = useLoginMutation();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  const {
+    register,
+    handleSubmit,
+    setError,
+    clearErrors,
+    formState: { errors },
+  } = useForm<LoginValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
 
+  const onSubmit = async (data: LoginValues) => {
+    clearErrors("root");
     try {
-      const result = await login({ email, password }).unwrap();
+      const result = await login(data).unwrap();
       dispatch(
         setCredentials({
           user: result.data.user,
           accessToken: result.data.accessToken,
           refreshToken: result.data.refreshToken,
-        })
+        }),
       );
       router.push("/dashboard");
     } catch (err: unknown) {
       const apiErr = err as { data?: { error?: { message?: string } } };
-      setError(apiErr.data?.error?.message ?? "Login failed. Please try again.");
+      setError("root", {
+        message: apiErr.data?.error?.message ?? "Login failed. Please try again.",
+      });
     }
   };
 
@@ -56,11 +73,11 @@ export function LoginForm() {
         <CardTitle className="text-xl">Welcome back</CardTitle>
         <CardDescription>Sign in to your streaming account</CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <CardContent className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              {error}
+          {errors.root && (
+            <div role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              {errors.root.message}
             </div>
           )}
           <div className="space-y-2">
@@ -69,22 +86,32 @@ export function LoginForm() {
               id="email"
               type="email"
               placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
               autoComplete="email"
+              aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? "email-error" : undefined}
+              {...register("email")}
             />
+            {errors.email && (
+              <p id="email-error" role="alert" className="text-xs text-destructive">
+                {errors.email.message}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
               autoComplete="current-password"
+              aria-invalid={!!errors.password}
+              aria-describedby={errors.password ? "password-error" : undefined}
+              {...register("password")}
             />
+            {errors.password && (
+              <p id="password-error" role="alert" className="text-xs text-destructive">
+                {errors.password.message}
+              </p>
+            )}
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-3">

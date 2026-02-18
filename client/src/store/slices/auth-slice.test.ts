@@ -46,10 +46,7 @@ describe("auth-slice", () => {
       }),
     );
 
-    const state = reducer(
-      initial,
-      setTokens({ accessToken: "new-at", refreshToken: "new-rt" }),
-    );
+    const state = reducer(initial, setTokens({ accessToken: "new-at", refreshToken: "new-rt" }));
 
     expect(state.accessToken).toBe("new-at");
     expect(state.refreshToken).toBe("new-rt");

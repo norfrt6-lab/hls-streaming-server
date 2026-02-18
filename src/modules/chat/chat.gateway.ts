@@ -1,6 +1,7 @@
 import type { Namespace, Socket } from "socket.io";
 import * as chatService from "./chat.service";
 import { logger } from "../../common/utils/logger";
+import { chatMessagesTotal } from "../../services/metrics/metrics.service";
 
 export function setupChatNamespace(chatNsp: Namespace) {
   chatNsp.on("connection", (socket: Socket) => {
@@ -35,32 +36,40 @@ export function setupChatNamespace(chatNsp: Namespace) {
       socket.leave(`chat:${streamId}`);
     });
 
-    socket.on("chat:message", async ({ streamId, content }: { streamId: string; content: string }) => {
-      if (!content?.trim()) return;
+    socket.on(
+      "chat:message",
+      async ({ streamId, content }: { streamId: string; content: string }) => {
+        if (!content?.trim()) return;
 
-      try {
-        const message = await chatService.sendMessage(streamId, userId, content);
-        const payload = {
-          id: message.id,
-          userId: message.userId,
-          username: message.user?.username ?? username,
-          displayName: message.user?.displayName ?? displayName,
-          avatarUrl: message.user?.avatarUrl ?? avatarUrl,
-          content: message.content,
-          timestamp: message.createdAt.toISOString(),
-          streamId,
-        };
-        chatNsp.to(`chat:${streamId}`).emit("chat:message", payload);
-      } catch (err: any) {
-        if (err.code === "FORBIDDEN") {
-          socket.emit("chat:error", { code: "BANNED", message: err.message });
-        } else if (err.code === "RATE_LIMITED") {
-          socket.emit("chat:error", { code: "RATE_LIMITED", message: err.message, retryAfter: 1 });
-        } else {
-          socket.emit("chat:error", { code: "SEND_FAILED", message: "Failed to send message" });
+        try {
+          const message = await chatService.sendMessage(streamId, userId, content);
+          chatMessagesTotal.inc();
+          const payload = {
+            id: message.id,
+            userId: message.userId,
+            username: message.user?.username ?? username,
+            displayName: message.user?.displayName ?? displayName,
+            avatarUrl: message.user?.avatarUrl ?? avatarUrl,
+            content: message.content,
+            timestamp: message.createdAt.toISOString(),
+            streamId,
+          };
+          chatNsp.to(`chat:${streamId}`).emit("chat:message", payload);
+        } catch (err: any) {
+          if (err.code === "FORBIDDEN") {
+            socket.emit("chat:error", { code: "BANNED", message: err.message });
+          } else if (err.code === "RATE_LIMITED") {
+            socket.emit("chat:error", {
+              code: "RATE_LIMITED",
+              message: err.message,
+              retryAfter: 1,
+            });
+          } else {
+            socket.emit("chat:error", { code: "SEND_FAILED", message: "Failed to send message" });
+          }
         }
-      }
-    });
+      },
+    );
 
     socket.on("chat:typing", ({ streamId }: { streamId: string }) => {
       socket.to(`chat:${streamId}`).emit("chat:typing", { username, streamId });

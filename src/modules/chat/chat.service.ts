@@ -2,10 +2,7 @@ import * as chatRepo from "./chat.repository";
 import * as auditService from "../audit/audit.service";
 import { AppError } from "../../common/utils/errors";
 
-export async function getMessages(
-  streamId: string,
-  params: { page: number; limit: number },
-) {
+export async function getMessages(streamId: string, params: { page: number; limit: number }) {
   const session = await chatRepo.getActiveSession(streamId);
   if (!session) {
     return { messages: [], total: 0 };
@@ -13,11 +10,7 @@ export async function getMessages(
   return chatRepo.findMessages(session.id, params);
 }
 
-export async function sendMessage(
-  streamId: string,
-  userId: string,
-  content: string,
-) {
+export async function sendMessage(streamId: string, userId: string, content: string) {
   // Check if user is banned
   const ban = await chatRepo.findBan(streamId, userId);
   if (ban) {
@@ -73,11 +66,7 @@ export async function banUser(
   return ban;
 }
 
-export async function unbanUser(
-  streamId: string,
-  userId: string,
-  adminId?: string,
-) {
+export async function unbanUser(streamId: string, userId: string, adminId?: string) {
   try {
     await chatRepo.removeBan(streamId, userId);
   } catch {
@@ -90,10 +79,6 @@ export async function unbanUser(
   }
 }
 
-export async function listBans(params: {
-  page: number;
-  limit: number;
-  search?: string;
-}) {
+export async function listBans(params: { page: number; limit: number; search?: string }) {
   return chatRepo.findAllBans(params);
 }

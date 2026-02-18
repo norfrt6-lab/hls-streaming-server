@@ -5,11 +5,7 @@ import { Topbar } from "@/components/layout/topbar";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
 
-export default function MainLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
       <div className="flex h-screen overflow-hidden">

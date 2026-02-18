@@ -25,7 +25,7 @@ function HealthBadge({ health }: { health: string }) {
         "text-xs",
         health === "good" && "border-green-500/50 text-green-500",
         health === "warning" && "border-yellow-500/50 text-yellow-500",
-        health === "critical" && "border-red-500/50 text-red-500"
+        health === "critical" && "border-red-500/50 text-red-500",
       )}
     >
       <Activity className="mr-1 h-3 w-3" />
@@ -59,9 +59,7 @@ export function StreamTable() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-medium">
-          Active Streams ({streams.length})
-        </CardTitle>
+        <CardTitle className="text-sm font-medium">Active Streams ({streams.length})</CardTitle>
       </CardHeader>
       <CardContent>
         {streams.length === 0 ? (

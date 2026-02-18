@@ -128,26 +128,22 @@ describe("streams.service.deleteStream", () => {
     (streamsRepo.findById as any).mockResolvedValue(mockStream);
     (streamsRepo.remove as any).mockResolvedValue(undefined);
 
-    await expect(
-      streamsService.deleteStream("s1", "u1", "streamer"),
-    ).resolves.toBeUndefined();
+    await expect(streamsService.deleteStream("s1", "u1", "streamer")).resolves.toBeUndefined();
   });
 
   it("allows admin to delete any stream", async () => {
     (streamsRepo.findById as any).mockResolvedValue(mockStream);
     (streamsRepo.remove as any).mockResolvedValue(undefined);
 
-    await expect(
-      streamsService.deleteStream("s1", "other", "admin"),
-    ).resolves.toBeUndefined();
+    await expect(streamsService.deleteStream("s1", "other", "admin")).resolves.toBeUndefined();
   });
 
   it("throws forbidden for non-owner non-admin", async () => {
     (streamsRepo.findById as any).mockResolvedValue(mockStream);
 
-    await expect(
-      streamsService.deleteStream("s1", "other", "viewer"),
-    ).rejects.toMatchObject({ status: 403 });
+    await expect(streamsService.deleteStream("s1", "other", "viewer")).rejects.toMatchObject({
+      status: 403,
+    });
   });
 });
 
@@ -160,9 +156,9 @@ describe("streams.service.getStreamKey", () => {
 
   it("throws forbidden for non-owner", async () => {
     (streamsRepo.findById as any).mockResolvedValue(mockStream);
-    await expect(
-      streamsService.getStreamKey("s1", "other", "viewer"),
-    ).rejects.toMatchObject({ status: 403 });
+    await expect(streamsService.getStreamKey("s1", "other", "viewer")).rejects.toMatchObject({
+      status: 403,
+    });
   });
 });
 
@@ -171,19 +167,15 @@ describe("streams.service.regenerateStreamKey", () => {
     (streamsRepo.findById as any).mockResolvedValue(mockStream);
     (streamsRepo.update as any).mockResolvedValue(mockStream);
 
-    const result = await streamsService.regenerateStreamKey(
-      "s1",
-      "u1",
-      "streamer",
-    );
+    const result = await streamsService.regenerateStreamKey("s1", "u1", "streamer");
     expect(result.streamKey).toBe("raw-key-uuid");
   });
 
   it("throws forbidden for non-owner", async () => {
     (streamsRepo.findById as any).mockResolvedValue(mockStream);
 
-    await expect(
-      streamsService.regenerateStreamKey("s1", "other", "viewer"),
-    ).rejects.toMatchObject({ status: 403 });
+    await expect(streamsService.regenerateStreamKey("s1", "other", "viewer")).rejects.toMatchObject(
+      { status: 403 },
+    );
   });
 });

@@ -1,16 +1,9 @@
 import { baseApi } from "./base-api";
-import type {
-  ApiResponse,
-  PaginationParams,
-  Recording,
-} from "@/types/api";
+import type { ApiResponse, PaginationParams, Recording } from "@/types/api";
 
 export const vodApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getRecordings: builder.query<
-      ApiResponse<Recording[]>,
-      PaginationParams & { search?: string }
-    >({
+    getRecordings: builder.query<ApiResponse<Recording[]>, PaginationParams & { search?: string }>({
       query: (params) => ({ url: "/vod", params }),
       providesTags: (result) =>
         result?.data

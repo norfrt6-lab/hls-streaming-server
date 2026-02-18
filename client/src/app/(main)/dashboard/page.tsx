@@ -5,9 +5,7 @@ import { StatsCards } from "@/components/dashboard/stats-cards";
 import { StreamTable } from "@/components/dashboard/stream-table";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const ChartSkeleton = () => (
-  <Skeleton className="h-[300px] w-full rounded-lg" />
-);
+const ChartSkeleton = () => <Skeleton className="h-[300px] w-full rounded-lg" />;
 
 const ViewerChart = dynamic(
   () =>

@@ -24,7 +24,7 @@ export function StatCard({ label, value, icon: Icon, trend, className }: StatCar
               <p
                 className={cn(
                   "text-xs font-medium",
-                  trend.value >= 0 ? "text-green-500" : "text-red-500"
+                  trend.value >= 0 ? "text-green-500" : "text-red-500",
                 )}
               >
                 {trend.value >= 0 ? "+" : ""}

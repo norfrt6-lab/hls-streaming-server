@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "@/store/slices/auth-slice";
 import {
@@ -24,20 +24,31 @@ import { CATEGORIES } from "@/lib/constants";
 
 export function StreamSettingsForm() {
   const user = useSelector(selectCurrentUser);
-  const { data } = useGetStreamsQuery(
-    { search: user?.username },
-    { skip: !user }
-  );
+  const { data } = useGetStreamsQuery({ userId: user?.id }, { skip: !user });
 
-  const stream = data?.data?.find((s) => s.userId === user?.id);
+  const stream = data?.data?.[0];
 
   const [createStream, { isLoading: isCreating }] = useCreateStreamMutation();
   const [updateStream, { isLoading: isUpdating }] = useUpdateStreamMutation();
 
-  const [title, setTitle] = useState(stream?.title ?? "");
-  const [description, setDescription] = useState(stream?.description ?? "");
-  const [category, setCategory] = useState(stream?.category ?? "");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
   const [saved, setSaved] = useState(false);
+
+  // Sync form state when stream data loads
+  const streamId = stream?.id;
+  const streamTitle = stream?.title;
+  const streamDescription = stream?.description;
+  const streamCategory = stream?.category;
+
+  useEffect(() => {
+    if (streamId) {
+      setTitle(streamTitle ?? "");
+      setDescription(streamDescription ?? "");
+      setCategory(streamCategory ?? "");
+    }
+  }, [streamId, streamTitle, streamDescription, streamCategory]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

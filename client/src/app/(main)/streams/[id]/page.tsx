@@ -12,16 +12,17 @@ import { resetPlayer } from "@/store/slices/player-slice";
 import { formatRelativeTime } from "@/lib/utils";
 import { STREAM_STATUS_LABELS } from "@/lib/constants";
 import { PlayerControls } from "@/components/player/player-controls";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { StreamSettings } from "@/components/streams/stream-settings";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const HlsPlayer = dynamic(
+const PlayerWithBoundary = dynamic(
   () =>
-    import("@/components/player/hls-player").then((m) => ({
-      default: m.HlsPlayer,
+    import("@/components/player/player-with-boundary").then((m) => ({
+      default: m.PlayerWithBoundary,
     })),
   {
     ssr: false,
@@ -36,7 +37,9 @@ export default function StreamDetailPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const currentUser = useSelector(selectCurrentUser);
 
-  const { data, isLoading, isError } = useGetStreamQuery(streamId);
+  const { data, isLoading, isError } = useGetStreamQuery(streamId, {
+    pollingInterval: 5000,
+  });
   const stream = data?.data;
 
   const isOwner = currentUser && stream && currentUser.id === stream.userId;
@@ -73,8 +76,7 @@ export default function StreamDetailPage() {
     );
   }
 
-  const displayName =
-    stream.user?.displayName ?? stream.user?.username ?? "Unknown";
+  const displayName = stream.user?.displayName ?? stream.user?.username ?? "Unknown";
 
   return (
     <div className="space-y-4">
@@ -82,17 +84,27 @@ export default function StreamDetailPage() {
       <div className="flex flex-col gap-4 lg:flex-row">
         {/* Left: Player */}
         <div className="flex-1 space-y-2">
-          <HlsPlayer
-            ref={videoRef}
-            src={`/media/live/${stream.id}/master.m3u8`}
-            className="rounded-xl overflow-hidden"
-          />
-          <PlayerControls videoRef={videoRef} />
+          {stream.status === "live" ? (
+            <>
+              <PlayerWithBoundary
+                ref={videoRef}
+                src={`/media/live/${stream.id}/master.m3u8`}
+                className="rounded-xl overflow-hidden"
+              />
+              <PlayerControls videoRef={videoRef} />
+            </>
+          ) : (
+            <div className="flex aspect-video w-full items-center justify-center rounded-xl bg-black">
+              <p className="text-muted-foreground">Stream is offline</p>
+            </div>
+          )}
         </div>
 
         {/* Right: Chat */}
         <div className="h-[400px] w-full lg:h-auto lg:w-[340px]">
-          <ChatPanel streamId={streamId} />
+          <ErrorBoundary>
+            <ChatPanel streamId={streamId} />
+          </ErrorBoundary>
         </div>
       </div>
 
@@ -103,11 +115,7 @@ export default function StreamDetailPage() {
             <h1 className="text-xl font-bold">{stream.title}</h1>
             <Badge
               variant={stream.status === "live" ? "default" : "secondary"}
-              className={
-                stream.status === "live"
-                  ? "bg-red-600 text-white hover:bg-red-600"
-                  : ""
-              }
+              className={stream.status === "live" ? "bg-red-600 text-white hover:bg-red-600" : ""}
             >
               {STREAM_STATUS_LABELS[stream.status] ?? stream.status}
             </Badge>

@@ -70,9 +70,9 @@ describe("users.service.updateUser", () => {
 
   it("throws notFound for missing user", async () => {
     (usersRepo.findById as any).mockResolvedValue(null);
-    await expect(
-      usersService.updateUser("nope", { displayName: "X" }),
-    ).rejects.toMatchObject({ status: 404 });
+    await expect(usersService.updateUser("nope", { displayName: "X" })).rejects.toMatchObject({
+      status: 404,
+    });
   });
 });
 
@@ -106,8 +106,8 @@ describe("users.service.updateRole", () => {
 
   it("throws notFound for missing user", async () => {
     (usersRepo.findById as any).mockResolvedValue(null);
-    await expect(
-      usersService.updateRole("nope", { role: "admin" }),
-    ).rejects.toMatchObject({ status: 404 });
+    await expect(usersService.updateRole("nope", { role: "admin" })).rejects.toMatchObject({
+      status: 404,
+    });
   });
 });

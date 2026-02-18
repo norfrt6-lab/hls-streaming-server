@@ -29,11 +29,7 @@ describe("ChatMessage", () => {
   });
 
   it("falls back to username when displayName is null", () => {
-    render(
-      <ChatMessage
-        message={{ ...baseMessage, displayName: null, username: "bob" }}
-      />,
-    );
+    render(<ChatMessage message={{ ...baseMessage, displayName: null, username: "bob" }} />);
     expect(screen.getByText("bob")).toBeInTheDocument();
   });
 

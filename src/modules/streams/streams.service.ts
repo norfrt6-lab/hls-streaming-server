@@ -4,13 +4,14 @@ import { generateStreamKey, hashStreamKey } from "../../common/utils/crypto";
 import * as auditService from "../audit/audit.service";
 import { stopTranscoding } from "../../services/transcoding/transcoder";
 import { stopThumbnailCapture } from "../thumbnails/thumbnails.service";
+import { disconnectRtmpSession } from "../../services/rtmp/rtmp.server";
 import { getIO } from "../../services/websocket/socket.server";
 import { emitStreamOffline } from "../../services/websocket/streams.namespace";
 import { prisma } from "../../config/database";
 import type { CreateStreamInput, UpdateStreamInput } from "./streams.validator";
 
 function stripStreamKey(stream: any) {
-  const { streamKey, ...rest } = stream;
+  const { streamKey: _streamKey, ...rest } = stream;
   return rest;
 }
 
@@ -19,6 +20,7 @@ export async function listStreams(params: {
   limit: number;
   status?: string;
   search?: string;
+  userId?: string;
 }) {
   const { streams, total } = await streamsRepo.findMany(params);
   return { streams: streams.map(stripStreamKey), total };
@@ -60,11 +62,7 @@ export async function updateStream(
   return stripStreamKey(updated);
 }
 
-export async function deleteStream(
-  id: string,
-  userId: string,
-  userRole: string,
-) {
+export async function deleteStream(id: string, userId: string, userRole: string) {
   const stream = await streamsRepo.findById(id);
   if (!stream) throw AppError.notFound("Stream not found");
   if (stream.userId !== userId && userRole !== "admin") {
@@ -73,11 +71,7 @@ export async function deleteStream(
   await streamsRepo.remove(id);
 }
 
-export async function getStreamKey(
-  id: string,
-  userId: string,
-  userRole: string,
-) {
+export async function getStreamKey(id: string, userId: string, userRole: string) {
   const stream = await streamsRepo.findById(id);
   if (!stream) throw AppError.notFound("Stream not found");
   if (stream.userId !== userId && userRole !== "admin") {
@@ -88,11 +82,7 @@ export async function getStreamKey(
   return { streamKey: "****" };
 }
 
-export async function regenerateStreamKey(
-  id: string,
-  userId: string,
-  userRole: string,
-) {
+export async function regenerateStreamKey(id: string, userId: string, userRole: string) {
   const stream = await streamsRepo.findById(id);
   if (!stream) throw AppError.notFound("Stream not found");
   if (stream.userId !== userId && userRole !== "admin") {
@@ -111,7 +101,8 @@ export async function forceStopStream(id: string, adminId?: string) {
   if (!stream) throw AppError.notFound("Stream not found");
   if (stream.status !== "live") throw AppError.badRequest("Stream is not live");
 
-  // Stop transcoding and thumbnails
+  // Disconnect RTMP session, stop transcoding and thumbnails
+  disconnectRtmpSession(id);
   stopTranscoding(id);
   stopThumbnailCapture(id);
 
@@ -128,9 +119,7 @@ export async function forceStopStream(id: string, adminId?: string) {
     });
 
     if (session) {
-      const duration = Math.floor(
-        (Date.now() - session.startedAt.getTime()) / 1000,
-      );
+      const duration = Math.floor((Date.now() - session.startedAt.getTime()) / 1000);
       await tx.streamSession.update({
         where: { id: session.id },
         data: {

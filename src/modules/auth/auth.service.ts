@@ -14,7 +14,7 @@ const REFRESH_TOKEN_PREFIX = "refresh:";
 const REFRESH_TTL = 7 * 24 * 60 * 60; // 7 days in seconds
 
 function userToPublic(user: any) {
-  const { password, ...rest } = user;
+  const { password: _password, ...rest } = user;
   return rest;
 }
 

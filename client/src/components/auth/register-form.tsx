@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Radio } from "lucide-react";
 import { useRegisterMutation } from "@/store/api/auth-api";
 import { setCredentials } from "@/store/slices/auth-slice";
@@ -19,43 +21,61 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+const registerSchema = z
+  .object({
+    username: z
+      .string()
+      .min(3, "Username must be at least 3 characters")
+      .max(30, "Username must be at most 30 characters")
+      .regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores allowed"),
+    email: z.string().min(1, "Email is required").email("Invalid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+type RegisterValues = z.infer<typeof registerSchema>;
+
 export function RegisterForm() {
   const router = useRouter();
   const dispatch = useDispatch();
-  const [register, { isLoading }] = useRegisterMutation();
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [registerUser, { isLoading }] = useRegisterMutation();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  const {
+    register,
+    handleSubmit,
+    setError,
+    clearErrors,
+    formState: { errors },
+  } = useForm<RegisterValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { username: "", email: "", password: "", confirmPassword: "" },
+  });
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
-      return;
-    }
-
+  const onSubmit = async (data: RegisterValues) => {
+    clearErrors("root");
     try {
-      const result = await register({ username, email, password }).unwrap();
+      const result = await registerUser({
+        username: data.username,
+        email: data.email,
+        password: data.password,
+      }).unwrap();
       dispatch(
         setCredentials({
           user: result.data.user,
           accessToken: result.data.accessToken,
           refreshToken: result.data.refreshToken,
-        })
+        }),
       );
       router.push("/dashboard");
     } catch (err: unknown) {
       const apiErr = err as { data?: { error?: { message?: string } } };
-      setError(apiErr.data?.error?.message ?? "Registration failed. Please try again.");
+      setError("root", {
+        message: apiErr.data?.error?.message ?? "Registration failed. Please try again.",
+      });
     }
   };
 
@@ -68,11 +88,11 @@ export function RegisterForm() {
         <CardTitle className="text-xl">Create an account</CardTitle>
         <CardDescription>Start streaming in minutes</CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <CardContent className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              {error}
+          {errors.root && (
+            <div role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              {errors.root.message}
             </div>
           )}
           <div className="space-y-2">
@@ -80,11 +100,16 @@ export function RegisterForm() {
             <Input
               id="username"
               placeholder="johndoe"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
               autoComplete="username"
+              aria-invalid={!!errors.username}
+              aria-describedby={errors.username ? "username-error" : undefined}
+              {...register("username")}
             />
+            {errors.username && (
+              <p id="username-error" role="alert" className="text-xs text-destructive">
+                {errors.username.message}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -92,33 +117,48 @@ export function RegisterForm() {
               id="email"
               type="email"
               placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
               autoComplete="email"
+              aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? "email-error" : undefined}
+              {...register("email")}
             />
+            {errors.email && (
+              <p id="email-error" role="alert" className="text-xs text-destructive">
+                {errors.email.message}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
               autoComplete="new-password"
+              aria-invalid={!!errors.password}
+              aria-describedby={errors.password ? "password-error" : undefined}
+              {...register("password")}
             />
+            {errors.password && (
+              <p id="password-error" role="alert" className="text-xs text-destructive">
+                {errors.password.message}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Confirm Password</Label>
             <Input
               id="confirmPassword"
               type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
               autoComplete="new-password"
+              aria-invalid={!!errors.confirmPassword}
+              aria-describedby={errors.confirmPassword ? "confirm-password-error" : undefined}
+              {...register("confirmPassword")}
             />
+            {errors.confirmPassword && (
+              <p id="confirm-password-error" role="alert" className="text-xs text-destructive">
+                {errors.confirmPassword.message}
+              </p>
+            )}
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-3">

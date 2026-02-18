@@ -12,10 +12,7 @@ import { POLLING_INTERVALS } from "@/lib/constants";
 
 export const analyticsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getStreamAnalytics: builder.query<
-      ApiResponse<StreamAnalyticsSummary>,
-      string
-    >({
+    getStreamAnalytics: builder.query<ApiResponse<StreamAnalyticsSummary>, string>({
       query: (streamId) => `/analytics/streams/${streamId}`,
       providesTags: (_result, _error, id) => [{ type: "Analytics", id }],
     }),

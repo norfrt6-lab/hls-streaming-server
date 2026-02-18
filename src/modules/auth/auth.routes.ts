@@ -13,12 +13,7 @@ import {
 
 const router = Router();
 
-router.post(
-  "/register",
-  authLimiter,
-  validate(registerSchema),
-  registerHandler,
-);
+router.post("/register", authLimiter, validate(registerSchema), registerHandler);
 router.post("/login", authLimiter, validate(loginSchema), loginHandler);
 router.post("/refresh", validate(refreshSchema), refreshHandler);
 router.post("/logout", authenticate, logoutHandler);

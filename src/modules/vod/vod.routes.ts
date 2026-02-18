@@ -1,11 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "../auth/auth.middleware";
-import {
-  listHandler,
-  getHandler,
-  deleteHandler,
-  manifestHandler,
-} from "./vod.controller";
+import { listHandler, getHandler, deleteHandler, manifestHandler } from "./vod.controller";
 
 const router = Router();
 

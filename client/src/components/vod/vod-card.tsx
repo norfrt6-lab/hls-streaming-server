@@ -38,9 +38,7 @@ export const VodCard = memo(function VodCard({ recording }: VodCardProps) {
           <h3 className="truncate text-sm font-medium">{recording.title}</h3>
           <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
             <span>
-              {recording.stream?.user?.displayName ??
-                recording.stream?.title ??
-                "Unknown"}
+              {recording.stream?.user?.displayName ?? recording.stream?.title ?? "Unknown"}
             </span>
             <span className="text-border">|</span>
             <span>{formatBytes(recording.fileSize)}</span>

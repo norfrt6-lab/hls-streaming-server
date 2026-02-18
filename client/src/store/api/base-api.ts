@@ -20,11 +20,11 @@ const rawBaseQuery = fetchBaseQuery({
   },
 });
 
-const baseQueryWithReauth: BaseQueryFn<
-  string | FetchArgs,
-  unknown,
-  FetchBaseQueryError
-> = async (args, api, extraOptions) => {
+const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
+  args,
+  api,
+  extraOptions,
+) => {
   let result = await rawBaseQuery(args, api, extraOptions);
 
   if (result.error && result.error.status === 401) {
@@ -42,14 +42,15 @@ const baseQueryWithReauth: BaseQueryFn<
         extraOptions,
       );
 
-      if (refreshResult.data) {
-        const data = refreshResult.data as {
-          data: { accessToken: string; refreshToken: string };
-        };
+      const refreshData = refreshResult.data as
+        | { data?: { accessToken?: string; refreshToken?: string } }
+        | undefined;
+
+      if (refreshData?.data?.accessToken && refreshData?.data?.refreshToken) {
         api.dispatch(
           setTokens({
-            accessToken: data.data.accessToken,
-            refreshToken: data.data.refreshToken,
+            accessToken: refreshData.data.accessToken,
+            refreshToken: refreshData.data.refreshToken,
           }),
         );
         result = await rawBaseQuery(args, api, extraOptions);
@@ -67,15 +68,6 @@ const baseQueryWithReauth: BaseQueryFn<
 export const baseApi = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: [
-    "User",
-    "Stream",
-    "Analytics",
-    "Chat",
-    "Vod",
-    "Users",
-    "Bans",
-    "AuditLog",
-  ],
+  tagTypes: ["User", "Stream", "Analytics", "Chat", "Vod", "Users", "Bans", "AuditLog"],
   endpoints: () => ({}),
 });

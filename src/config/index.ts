@@ -6,7 +6,9 @@ export const config = {
   rtmpPort: parseInt(process.env.RTMP_PORT ?? "1935", 10),
 
   database: {
-    url: process.env.DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/hls_streaming?schema=public",
+    url:
+      process.env.DATABASE_URL ??
+      "postgresql://postgres:postgres@localhost:5432/hls_streaming?schema=public",
   },
 
   redis: {
@@ -39,5 +41,9 @@ export const config = {
 
   cors: {
     origin: process.env.CORS_ORIGIN ?? "*",
+  },
+
+  cleanup: {
+    intervalHours: parseInt(process.env.CLEANUP_INTERVAL_HOURS ?? "24", 10),
   },
 } as const;

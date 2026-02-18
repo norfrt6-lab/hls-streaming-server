@@ -33,9 +33,7 @@ const adminNavigation = [
   { href: "/admin/audit", icon: ScrollText, label: "Audit Log" },
 ];
 
-const bottomNavigation = [
-  { href: "/settings", icon: Settings, label: "Settings" },
-];
+const bottomNavigation = [{ href: "/settings", icon: Settings, label: "Settings" }];
 
 export function Sidebar() {
   const dispatch = useDispatch();
@@ -50,10 +48,7 @@ export function Sidebar() {
       )}
     >
       <div
-        className={cn(
-          "flex h-14 items-center border-b px-4",
-          collapsed && "justify-center px-2",
-        )}
+        className={cn("flex h-14 items-center border-b px-4", collapsed && "justify-center px-2")}
       >
         {!collapsed && (
           <div className="flex items-center gap-2">
@@ -88,10 +83,7 @@ export function Sidebar() {
           variant="ghost"
           size="sm"
           onClick={() => dispatch(toggleSidebar())}
-          className={cn(
-            "w-full",
-            collapsed ? "justify-center px-2" : "justify-start",
-          )}
+          className={cn("w-full", collapsed ? "justify-center px-2" : "justify-start")}
         >
           {collapsed ? (
             <ChevronsRight className="h-4 w-4" />

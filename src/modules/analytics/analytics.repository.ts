@@ -11,10 +11,7 @@ export async function getStreamSummary(streamId: string) {
   });
 
   const totalSessions = sessions.length;
-  const totalWatchHours = sessions.reduce(
-    (acc, s) => acc + (s.durationSeconds ?? 0) / 3600,
-    0,
-  );
+  const totalWatchHours = sessions.reduce((acc, s) => acc + (s.durationSeconds ?? 0) / 3600, 0);
   const peakViewers = Math.max(0, ...sessions.map((s) => s.peakViewers));
   const avgViewers =
     totalSessions > 0
@@ -29,10 +26,7 @@ export async function getStreamSummary(streamId: string) {
   };
 }
 
-export async function getViewerEvents(
-  streamId: string,
-  params: { page: number; limit: number },
-) {
+export async function getViewerEvents(streamId: string, params: { page: number; limit: number }) {
   const sessions = await prisma.streamSession.findMany({
     where: { streamId },
     select: { id: true },
@@ -54,10 +48,7 @@ export async function getViewerEvents(
   return { events, total };
 }
 
-export async function getStreamSessions(
-  streamId: string,
-  params: { page: number; limit: number },
-) {
+export async function getStreamSessions(streamId: string, params: { page: number; limit: number }) {
   const [sessions, total] = await Promise.all([
     prisma.streamSession.findMany({
       where: { streamId },

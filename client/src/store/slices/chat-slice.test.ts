@@ -40,20 +40,14 @@ describe("chat-slice", () => {
 
   it("addMessage appends message", () => {
     const initial = reducer(undefined, initRoom("s1"));
-    const state = reducer(
-      initial,
-      addMessage({ streamId: "s1", message: createMsg("m1") }),
-    );
+    const state = reducer(initial, addMessage({ streamId: "s1", message: createMsg("m1") }));
     expect(state.rooms["s1"].messages).toHaveLength(1);
   });
 
   it("addMessage rotates at MAX_MESSAGES (200)", () => {
     let state = reducer(undefined, initRoom("s1"));
     for (let i = 0; i < 201; i++) {
-      state = reducer(
-        state,
-        addMessage({ streamId: "s1", message: createMsg(`m${i}`) }),
-      );
+      state = reducer(state, addMessage({ streamId: "s1", message: createMsg(`m${i}`) }));
     }
     expect(state.rooms["s1"].messages).toHaveLength(200);
     // First message should have been shifted out
@@ -62,14 +56,8 @@ describe("chat-slice", () => {
 
   it("removeMessage removes by id", () => {
     let state = reducer(undefined, initRoom("s1"));
-    state = reducer(
-      state,
-      addMessage({ streamId: "s1", message: createMsg("m1") }),
-    );
-    state = reducer(
-      state,
-      addMessage({ streamId: "s1", message: createMsg("m2") }),
-    );
+    state = reducer(state, addMessage({ streamId: "s1", message: createMsg("m1") }));
+    state = reducer(state, addMessage({ streamId: "s1", message: createMsg("m2") }));
     state = reducer(state, removeMessage({ streamId: "s1", messageId: "m1" }));
 
     expect(state.rooms["s1"].messages).toHaveLength(1);
@@ -77,34 +65,22 @@ describe("chat-slice", () => {
   });
 
   it("setTypingUser and removeTypingUser work", () => {
-    let state = reducer(
-      undefined,
-      setTypingUser({ streamId: "s1", username: "bob" }),
-    );
+    let state = reducer(undefined, setTypingUser({ streamId: "s1", username: "bob" }));
     expect(state.typingUsers["s1"]).toEqual(["bob"]);
 
-    state = reducer(
-      state,
-      removeTypingUser({ streamId: "s1", username: "bob" }),
-    );
+    state = reducer(state, removeTypingUser({ streamId: "s1", username: "bob" }));
     expect(state.typingUsers["s1"]).toEqual([]);
   });
 
   it("setRateLimited updates state", () => {
-    const state = reducer(
-      undefined,
-      setRateLimited({ limited: true, retryAfter: 5 }),
-    );
+    const state = reducer(undefined, setRateLimited({ limited: true, retryAfter: 5 }));
     expect(state.rateLimited).toBe(true);
     expect(state.rateLimitRetryAfter).toBe(5);
   });
 
   it("resetChat returns initial state", () => {
     let state = reducer(undefined, initRoom("s1"));
-    state = reducer(
-      state,
-      addMessage({ streamId: "s1", message: createMsg("m1") }),
-    );
+    state = reducer(state, addMessage({ streamId: "s1", message: createMsg("m1") }));
     state = reducer(state, resetChat());
 
     expect(state.rooms).toEqual({});

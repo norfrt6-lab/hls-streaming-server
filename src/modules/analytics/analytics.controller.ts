@@ -3,26 +3,16 @@ import * as analyticsService from "./analytics.service";
 import { sendSuccess, paginate } from "../../common/utils/response";
 import type { AuthRequest } from "../auth/auth.middleware";
 
-export async function summaryHandler(
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-) {
+export async function summaryHandler(req: AuthRequest, res: Response, next: NextFunction) {
   try {
-    const summary = await analyticsService.getStreamSummary(
-      req.params.streamId as string,
-    );
+    const summary = await analyticsService.getStreamSummary(req.params.streamId as string);
     sendSuccess(res, summary);
   } catch (err) {
     next(err);
   }
 }
 
-export async function viewersHandler(
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-) {
+export async function viewersHandler(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
@@ -37,11 +27,7 @@ export async function viewersHandler(
   }
 }
 
-export async function sessionsHandler(
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-) {
+export async function sessionsHandler(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
@@ -56,11 +42,7 @@ export async function sessionsHandler(
   }
 }
 
-export async function dashboardHandler(
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-) {
+export async function dashboardHandler(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const metrics = await analyticsService.getDashboardMetrics();
     sendSuccess(res, metrics);

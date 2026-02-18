@@ -24,10 +24,7 @@ describe("player-slice", () => {
   });
 
   it("setAvailableQualities sets the list", () => {
-    const state = reducer(
-      undefined,
-      setAvailableQualities([1080, 720, 480, 360]),
-    );
+    const state = reducer(undefined, setAvailableQualities([1080, 720, 480, 360]));
     expect(state.availableQualities).toEqual([1080, 720, 480, 360]);
   });
 

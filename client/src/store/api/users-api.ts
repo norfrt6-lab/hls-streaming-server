@@ -1,10 +1,5 @@
 import { baseApi } from "./base-api";
-import type {
-  ApiResponse,
-  PaginationParams,
-  User,
-  UserRole,
-} from "@/types/api";
+import type { ApiResponse, PaginationParams, User, UserRole } from "@/types/api";
 
 export const usersApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -40,10 +35,7 @@ export const usersApi = baseApi.injectEndpoints({
       query: (id) => ({ url: `/users/${id}`, method: "DELETE" }),
       invalidatesTags: [{ type: "Users", id: "LIST" }],
     }),
-    changeUserRole: builder.mutation<
-      ApiResponse<User>,
-      { id: string; role: UserRole }
-    >({
+    changeUserRole: builder.mutation<ApiResponse<User>, { id: string; role: UserRole }>({
       query: ({ id, role }) => ({
         url: `/users/${id}/role`,
         method: "PATCH",

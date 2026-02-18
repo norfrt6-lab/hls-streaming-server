@@ -25,26 +25,16 @@ router.get("/", async (req: AuthRequest, res: Response, next: NextFunction) => {
 });
 
 // POST /streams/:id/chat/ban
-router.post(
-  "/ban",
-  authenticate,
-  async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      const streamId = req.params.id as string;
-      const { userId, reason, expiresAt } = req.body;
-      const ban = await chatService.banUser(
-        streamId,
-        userId,
-        req.userId!,
-        reason,
-        expiresAt,
-      );
-      sendSuccess(res, ban, 201);
-    } catch (err) {
-      next(err);
-    }
-  },
-);
+router.post("/ban", authenticate, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const streamId = req.params.id as string;
+    const { userId, reason, expiresAt } = req.body;
+    const ban = await chatService.banUser(streamId, userId, req.userId!, reason, expiresAt);
+    sendSuccess(res, ban, 201);
+  } catch (err) {
+    next(err);
+  }
+});
 
 // DELETE /streams/:id/chat/ban/:userId
 router.delete(
@@ -52,11 +42,7 @@ router.delete(
   authenticate,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      await chatService.unbanUser(
-        req.params.id as string,
-        req.params.userId as string,
-        req.userId,
-      );
+      await chatService.unbanUser(req.params.id as string, req.params.userId as string, req.userId);
       sendSuccess(res, null);
     } catch (err) {
       next(err);
@@ -70,10 +56,7 @@ router.delete(
   authenticate,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      await chatService.deleteMessage(
-        req.params.messageId as string,
-        req.userId,
-      );
+      await chatService.deleteMessage(req.params.messageId as string, req.userId);
       sendSuccess(res, null);
     } catch (err) {
       next(err);

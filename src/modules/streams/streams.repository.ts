@@ -17,11 +17,16 @@ export async function findMany(params: {
   limit: number;
   status?: string;
   search?: string;
+  userId?: string;
 }) {
   const where: Prisma.StreamWhereInput = {};
 
   if (params.status) {
     where.status = params.status as any;
+  }
+
+  if (params.userId) {
+    where.userId = params.userId;
   }
 
   if (params.search) {

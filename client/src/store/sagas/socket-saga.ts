@@ -1,13 +1,5 @@
 import { eventChannel, type EventChannel } from "redux-saga";
-import {
-  call,
-  fork,
-  put,
-  take,
-  takeLatest,
-  cancelled,
-  select,
-} from "redux-saga/effects";
+import { fork, put, take, takeLatest, select } from "redux-saga/effects";
 import { io, type Socket } from "socket.io-client";
 import { SOCKET_URL, SOCKET_NAMESPACES } from "@/lib/constants";
 import {
@@ -18,6 +10,7 @@ import {
   updateDashboardStream,
   resetSocket,
 } from "@/store/slices/socket-slice";
+import { baseApi } from "@/store/api/base-api";
 import {
   setHistory,
   addMessage,
@@ -68,6 +61,7 @@ function createSocketChannel(socket: Socket): EventChannel<SocketEvent> {
   return eventChannel((emit) => {
     socket.on("connect", () => emit({ type: "connect" }));
     socket.on("disconnect", () => emit({ type: "disconnect" }));
+    socket.on("connect_error", () => emit({ type: "disconnect" }));
 
     // Stream namespace events
     socket.on("stream:live", (payload: StreamLivePayload) =>
@@ -86,6 +80,7 @@ function createSocketChannel(socket: Socket): EventChannel<SocketEvent> {
     return () => {
       socket.off("connect");
       socket.off("disconnect");
+      socket.off("connect_error");
       socket.off("stream:live");
       socket.off("stream:offline");
       socket.off("stream:viewers");
@@ -98,26 +93,22 @@ function createChatChannel(socket: Socket): EventChannel<SocketEvent> {
   return eventChannel((emit) => {
     socket.on("connect", () => emit({ type: "connect" }));
     socket.on("disconnect", () => emit({ type: "disconnect" }));
+    socket.on("connect_error", () => emit({ type: "disconnect" }));
     socket.on("chat:history", (payload: ChatHistoryPayload) =>
       emit({ type: "chat:history", payload }),
     );
-    socket.on(
-      "chat:message",
-      (payload: ChatMessageReceived & { streamId: string }) =>
-        emit({ type: "chat:message", payload }),
+    socket.on("chat:message", (payload: ChatMessageReceived & { streamId: string }) =>
+      emit({ type: "chat:message", payload }),
     );
-    socket.on(
-      "chat:deleted",
-      (payload: ChatDeletedPayload & { streamId: string }) =>
-        emit({ type: "chat:deleted", payload }),
+    socket.on("chat:deleted", (payload: ChatDeletedPayload & { streamId: string }) =>
+      emit({ type: "chat:deleted", payload }),
     );
-    socket.on("chat:error", (payload: ChatErrorPayload) =>
-      emit({ type: "chat:error", payload }),
-    );
+    socket.on("chat:error", (payload: ChatErrorPayload) => emit({ type: "chat:error", payload }));
 
     return () => {
       socket.off("connect");
       socket.off("disconnect");
+      socket.off("connect_error");
       socket.off("chat:history");
       socket.off("chat:message");
       socket.off("chat:deleted");
@@ -130,6 +121,7 @@ function createDashboardChannel(socket: Socket): EventChannel<SocketEvent> {
   return eventChannel((emit) => {
     socket.on("connect", () => emit({ type: "connect" }));
     socket.on("disconnect", () => emit({ type: "disconnect" }));
+    socket.on("connect_error", () => emit({ type: "disconnect" }));
     socket.on("dashboard:metrics", (payload: DashboardMetricsPayload) =>
       emit({ type: "dashboard:metrics", payload }),
     );
@@ -140,6 +132,7 @@ function createDashboardChannel(socket: Socket): EventChannel<SocketEvent> {
     return () => {
       socket.off("connect");
       socket.off("disconnect");
+      socket.off("connect_error");
       socket.off("dashboard:metrics");
       socket.off("dashboard:stream");
     };
@@ -178,6 +171,26 @@ function* handleStreamsSocket(): Generator {
         case "disconnect":
           yield put(setConnected({ namespace: "streams", connected: false }));
           break;
+        case "stream:live":
+          // Invalidate stream cache so pages refetch immediately
+          yield put(
+            baseApi.util.invalidateTags([
+              { type: "Stream", id: event.payload.streamId },
+              { type: "Stream", id: "LIST" },
+              { type: "Stream", id: "LIVE" },
+            ]),
+          );
+          break;
+        case "stream:offline":
+          // Invalidate stream cache so viewer page shows offline immediately
+          yield put(
+            baseApi.util.invalidateTags([
+              { type: "Stream", id: event.payload.streamId },
+              { type: "Stream", id: "LIST" },
+              { type: "Stream", id: "LIVE" },
+            ]),
+          );
+          break;
         case "stream:viewers":
           yield put(updateViewerCount(event.payload));
           break;
@@ -187,18 +200,14 @@ function* handleStreamsSocket(): Generator {
       }
     }
   } finally {
-    if ((yield cancelled()) as boolean) {
-      channel.close();
-      socket.disconnect();
-      delete sockets[SOCKET_NAMESPACES.STREAMS];
-    }
+    channel.close();
+    socket.disconnect();
+    delete sockets[SOCKET_NAMESPACES.STREAMS];
   }
 }
 
 function* handleChatSocket(): Generator {
-  const token =
-    ((yield select((s: RootState) => s.auth.accessToken)) as string) ??
-    undefined;
+  const token = ((yield select((s: RootState) => s.auth.accessToken)) as string) ?? undefined;
   const socket = getOrCreateSocket(SOCKET_NAMESPACES.CHAT, token);
   const channel = createChatChannel(socket) as EventChannel<SocketEvent>;
 
@@ -249,18 +258,14 @@ function* handleChatSocket(): Generator {
       }
     }
   } finally {
-    if ((yield cancelled()) as boolean) {
-      channel.close();
-      socket.disconnect();
-      delete sockets[SOCKET_NAMESPACES.CHAT];
-    }
+    channel.close();
+    socket.disconnect();
+    delete sockets[SOCKET_NAMESPACES.CHAT];
   }
 }
 
 function* handleDashboardSocket(): Generator {
-  const token =
-    ((yield select((s: RootState) => s.auth.accessToken)) as string) ??
-    undefined;
+  const token = ((yield select((s: RootState) => s.auth.accessToken)) as string) ?? undefined;
   const socket = getOrCreateSocket(SOCKET_NAMESPACES.DASHBOARD, token);
   const channel = createDashboardChannel(socket) as EventChannel<SocketEvent>;
 
@@ -283,11 +288,9 @@ function* handleDashboardSocket(): Generator {
       }
     }
   } finally {
-    if ((yield cancelled()) as boolean) {
-      channel.close();
-      socket.disconnect();
-      delete sockets[SOCKET_NAMESPACES.DASHBOARD];
-    }
+    channel.close();
+    socket.disconnect();
+    delete sockets[SOCKET_NAMESPACES.DASHBOARD];
   }
 }
 
@@ -305,20 +308,14 @@ function* handleDisconnect(): Generator {
   yield put(resetSocket());
 }
 
-function* handleJoinStream(action: {
-  type: string;
-  payload: string;
-}): Generator {
+function* handleJoinStream(action: { type: string; payload: string }): Generator {
   const socket = sockets[SOCKET_NAMESPACES.STREAMS];
   if (socket?.connected) {
     socket.emit("stream:join", { streamId: action.payload });
   }
 }
 
-function* handleLeaveStream(action: {
-  type: string;
-  payload: string;
-}): Generator {
+function* handleLeaveStream(action: { type: string; payload: string }): Generator {
   const socket = sockets[SOCKET_NAMESPACES.STREAMS];
   if (socket?.connected) {
     socket.emit("stream:leave", { streamId: action.payload });
@@ -333,10 +330,7 @@ function* handleJoinChat(action: { type: string; payload: string }): Generator {
   }
 }
 
-function* handleLeaveChat(action: {
-  type: string;
-  payload: string;
-}): Generator {
+function* handleLeaveChat(action: { type: string; payload: string }): Generator {
   const socket = sockets[SOCKET_NAMESPACES.CHAT];
   if (socket?.connected) {
     socket.emit("chat:leave", { streamId: action.payload });
@@ -353,10 +347,7 @@ function* handleSendChatMessage(action: {
   }
 }
 
-function* handleSendTyping(action: {
-  type: string;
-  payload: string;
-}): Generator {
+function* handleSendTyping(action: { type: string; payload: string }): Generator {
   const socket = sockets[SOCKET_NAMESPACES.CHAT];
   if (socket?.connected) {
     socket.emit("chat:typing", { streamId: action.payload });

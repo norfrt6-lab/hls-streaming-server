@@ -1,15 +1,7 @@
 "use client";
 
 import { useSelector, useDispatch } from "react-redux";
-import {
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  Maximize,
-  Minimize,
-  Loader2,
-} from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, Loader2 } from "lucide-react";
 import {
   selectPlayerState,
   setPlaying,
@@ -27,8 +19,7 @@ interface PlayerControlsProps {
 
 export function PlayerControls({ videoRef }: PlayerControlsProps) {
   const dispatch = useDispatch();
-  const { isPlaying, volume, muted, isFullscreen, isBuffering } =
-    useSelector(selectPlayerState);
+  const { isPlaying, volume, muted, isFullscreen, isBuffering } = useSelector(selectPlayerState);
 
   const handlePlayPause = () => {
     const video = videoRef.current;
@@ -121,7 +112,7 @@ export function PlayerControls({ videoRef }: PlayerControlsProps) {
           onChange={handleVolumeChange}
           className={cn(
             "h-1 w-20 cursor-pointer appearance-none rounded-full bg-white/30",
-            "[&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+            "[&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white",
           )}
         />
       </div>
@@ -139,11 +130,7 @@ export function PlayerControls({ videoRef }: PlayerControlsProps) {
         className="h-8 w-8 text-white hover:bg-white/20 hover:text-white"
         onClick={handleFullscreen}
       >
-        {isFullscreen ? (
-          <Minimize className="h-4 w-4" />
-        ) : (
-          <Maximize className="h-4 w-4" />
-        )}
+        {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
       </Button>
     </div>
   );

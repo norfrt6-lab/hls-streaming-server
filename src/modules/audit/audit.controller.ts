@@ -4,11 +4,7 @@ import { sendSuccess, paginate } from "../../common/utils/response";
 import type { AuthRequest } from "../auth/auth.middleware";
 import type { AuditAction } from "@prisma/client";
 
-export async function listHandler(
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-) {
+export async function listHandler(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;

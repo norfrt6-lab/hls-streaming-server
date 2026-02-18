@@ -25,7 +25,13 @@ function MetricBar({ label, value, max, unit, icon }: MetricBarProps) {
           {icon}
           {label}
         </span>
-        <span className={cn("font-medium", pct > 80 && "text-red-500", pct > 60 && pct <= 80 && "text-yellow-500")}>
+        <span
+          className={cn(
+            "font-medium",
+            pct > 80 && "text-red-500",
+            pct > 60 && pct <= 80 && "text-yellow-500",
+          )}
+        >
           {value}
           {unit} / {max}
           {unit}

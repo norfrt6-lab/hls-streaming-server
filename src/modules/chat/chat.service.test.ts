@@ -75,9 +75,7 @@ describe("chat.service.sendMessage", () => {
       expiresAt: null,
     });
 
-    await expect(
-      chatService.sendMessage("s1", "u1", "Hi"),
-    ).rejects.toMatchObject({ status: 403 });
+    await expect(chatService.sendMessage("s1", "u1", "Hi")).rejects.toMatchObject({ status: 403 });
   });
 
   it("throws forbidden when ban has not expired", async () => {
@@ -88,9 +86,7 @@ describe("chat.service.sendMessage", () => {
       expiresAt: future,
     });
 
-    await expect(
-      chatService.sendMessage("s1", "u1", "Hi"),
-    ).rejects.toMatchObject({ status: 403 });
+    await expect(chatService.sendMessage("s1", "u1", "Hi")).rejects.toMatchObject({ status: 403 });
   });
 
   it("allows message when ban has expired", async () => {
@@ -104,9 +100,7 @@ describe("chat.service.sendMessage", () => {
     (chatRepo.getActiveSession as any).mockResolvedValue(mockSession);
     (chatRepo.createMessage as any).mockResolvedValue(mockMessage);
 
-    await expect(
-      chatService.sendMessage("s1", "u1", "Hi"),
-    ).resolves.toBeDefined();
+    await expect(chatService.sendMessage("s1", "u1", "Hi")).resolves.toBeDefined();
     expect(chatRepo.removeBan).toHaveBeenCalled();
   });
 
@@ -114,9 +108,7 @@ describe("chat.service.sendMessage", () => {
     (chatRepo.findBan as any).mockResolvedValue(null);
     (chatRepo.getActiveSession as any).mockResolvedValue(null);
 
-    await expect(
-      chatService.sendMessage("s1", "u1", "Hi"),
-    ).rejects.toMatchObject({ status: 400 });
+    await expect(chatService.sendMessage("s1", "u1", "Hi")).rejects.toMatchObject({ status: 400 });
   });
 });
 
@@ -150,9 +142,7 @@ describe("chat.service.banUser", () => {
   it("throws conflict on duplicate ban", async () => {
     (chatRepo.findBan as any).mockResolvedValue({ streamId: "s1", userId: "u2" });
 
-    await expect(
-      chatService.banUser("s1", "u2", "u1"),
-    ).rejects.toMatchObject({ status: 409 });
+    await expect(chatService.banUser("s1", "u2", "u1")).rejects.toMatchObject({ status: 409 });
   });
 });
 
@@ -160,16 +150,12 @@ describe("chat.service.unbanUser", () => {
   it("removes a ban", async () => {
     (chatRepo.removeBan as any).mockResolvedValue(undefined);
 
-    await expect(
-      chatService.unbanUser("s1", "u2"),
-    ).resolves.toBeUndefined();
+    await expect(chatService.unbanUser("s1", "u2")).resolves.toBeUndefined();
   });
 
   it("throws notFound when ban does not exist", async () => {
     (chatRepo.removeBan as any).mockRejectedValue(new Error("not found"));
 
-    await expect(
-      chatService.unbanUser("s1", "u2"),
-    ).rejects.toMatchObject({ status: 404 });
+    await expect(chatService.unbanUser("s1", "u2")).rejects.toMatchObject({ status: 404 });
   });
 });

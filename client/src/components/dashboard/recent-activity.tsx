@@ -37,16 +37,11 @@ export function RecentActivity() {
       <CardContent>
         <ScrollArea className="h-72">
           {streams.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              No recent activity.
-            </p>
+            <p className="py-8 text-center text-sm text-muted-foreground">No recent activity.</p>
           ) : (
             <div className="space-y-3">
               {streams.map((stream) => (
-                <div
-                  key={stream.id}
-                  className="flex items-center gap-3 rounded-md border p-3"
-                >
+                <div key={stream.id} className="flex items-center gap-3 rounded-md border p-3">
                   <div className="rounded-md bg-primary/10 p-1.5">
                     {stream.status === "live" ? (
                       <RadioTower className="h-3.5 w-3.5 text-green-500" />

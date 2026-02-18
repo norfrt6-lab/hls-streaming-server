@@ -79,13 +79,8 @@ describe("analytics.service.getStreamSessions", () => {
 describe("analytics.service.getDashboardMetrics", () => {
   it("returns active streams, viewer count, CPU and memory", async () => {
     (prisma.stream.count as any).mockResolvedValue(2);
-    (prisma.stream.findMany as any).mockResolvedValue([
-      { id: "s1" },
-      { id: "s2" },
-    ]);
-    (redis.get as any)
-      .mockResolvedValueOnce("10")
-      .mockResolvedValueOnce("5");
+    (prisma.stream.findMany as any).mockResolvedValue([{ id: "s1" }, { id: "s2" }]);
+    (redis.get as any).mockResolvedValueOnce("10").mockResolvedValueOnce("5");
 
     const result = await analyticsService.getDashboardMetrics();
 

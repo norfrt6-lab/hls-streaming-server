@@ -53,9 +53,7 @@ describe("JWT tokens", () => {
 describe("stream key", () => {
   it("generateStreamKey returns a UUID format string", () => {
     const key = generateStreamKey();
-    expect(key).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
-    );
+    expect(key).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
   });
 
   it("hashStreamKey returns a consistent SHA256 hex", () => {

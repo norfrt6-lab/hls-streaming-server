@@ -40,7 +40,7 @@ const socketSlice = createSlice({
   reducers: {
     setConnected(
       state,
-      action: PayloadAction<{ namespace: keyof SocketState["connected"]; connected: boolean }>
+      action: PayloadAction<{ namespace: keyof SocketState["connected"]; connected: boolean }>,
     ) {
       state.connected[action.payload.namespace] = action.payload.connected;
     },
@@ -100,7 +100,6 @@ export const selectDashboardMetrics = (state: { socket: SocketState }) =>
   state.socket.dashboardMetrics;
 export const selectDashboardStreams = (state: { socket: SocketState }) =>
   state.socket.dashboardStreams;
-export const selectMetricsHistory = (state: { socket: SocketState }) =>
-  state.socket.metricsHistory;
+export const selectMetricsHistory = (state: { socket: SocketState }) => state.socket.metricsHistory;
 
 export default socketSlice.reducer;
