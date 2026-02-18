@@ -1,0 +1,201 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  admin
+  streamer
+  viewer
+}
+
+enum StreamStatus {
+  offline
+  live
+  error
+}
+
+enum SessionStatus {
+  live
+  ended
+  error
+}
+
+enum RecordingStatus {
+  processing
+  ready
+  error
+}
+
+enum ViewerEventType {
+  join
+  leave
+  quality_change
+}
+
+enum AuditAction {
+  USER_CREATED
+  USER_DELETED
+  ROLE_CHANGED
+  STREAM_STOPPED
+  USER_BANNED
+  USER_UNBANNED
+  MESSAGE_DELETED
+}
+
+enum AuditTargetType {
+  user
+  stream
+  chat
+}
+
+model User {
+  id          String   @id @default(uuid())
+  username    String   @unique
+  email       String   @unique
+  password    String
+  displayName String?  @map("display_name")
+  avatarUrl   String?  @map("avatar_url")
+  role        UserRole @default(viewer)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  streams      Stream[]
+  chatMessages ChatMessage[]
+  bans         UserBan[]      @relation("BannedUser")
+  issuedBans   UserBan[]      @relation("BanIssuer")
+  viewerEvents ViewerEvent[]
+  auditLogs    AuditLog[]
+
+  @@map("users")
+}
+
+model Stream {
+  id           String       @id @default(uuid())
+  userId       String       @map("user_id")
+  title        String
+  description  String?
+  category     String?
+  streamKey    String       @unique @map("stream_key")
+  status       StreamStatus @default(offline)
+  isRecording  Boolean      @default(false) @map("is_recording")
+  thumbnailUrl String?      @map("thumbnail_url")
+  startedAt    DateTime?    @map("started_at")
+  endedAt      DateTime?    @map("ended_at")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessions   StreamSession[]
+  recordings Recording[]
+  bans       UserBan[]
+
+  @@map("streams")
+}
+
+model StreamSession {
+  id                 String        @id @default(uuid())
+  streamId           String        @map("stream_id")
+  startedAt          DateTime      @default(now()) @map("started_at")
+  endedAt            DateTime?     @map("ended_at")
+  durationSeconds    Int?          @map("duration_seconds")
+  peakViewers        Int           @default(0) @map("peak_viewers")
+  totalUniqueViewers Int           @default(0) @map("total_unique_viewers")
+  avgBitrate         Float?        @map("avg_bitrate")
+  recordingPath      String?       @map("recording_path")
+  recordingSize      BigInt?       @map("recording_size")
+  status             SessionStatus @default(live)
+
+  stream       Stream        @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  chatMessages ChatMessage[]
+  viewerEvents ViewerEvent[]
+  recordings   Recording[]
+
+  @@map("stream_sessions")
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  sessionId String   @map("session_id")
+  userId    String   @map("user_id")
+  content   String
+  isDeleted Boolean  @default(false) @map("is_deleted")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  session StreamSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("chat_messages")
+}
+
+model UserBan {
+  id        String    @id @default(uuid())
+  streamId  String    @map("stream_id")
+  userId    String    @map("user_id")
+  bannedBy  String    @map("banned_by")
+  reason    String?
+  expiresAt DateTime? @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  stream Stream @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  user   User   @relation("BannedUser", fields: [userId], references: [id], onDelete: Cascade)
+  issuer User   @relation("BanIssuer", fields: [bannedBy], references: [id], onDelete: Cascade)
+
+  @@unique([streamId, userId])
+  @@map("user_bans")
+}
+
+model ViewerEvent {
+  id        String          @id @default(uuid())
+  sessionId String          @map("session_id")
+  userId    String?         @map("user_id")
+  eventType ViewerEventType @map("event_type")
+  metadata  Json            @default("{}")
+  createdAt DateTime        @default(now()) @map("created_at")
+
+  session StreamSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("viewer_events")
+}
+
+model Recording {
+  id              String          @id @default(uuid())
+  sessionId       String          @map("session_id")
+  streamId        String          @map("stream_id")
+  title           String
+  filePath        String          @map("file_path")
+  hlsPath         String          @map("hls_path")
+  thumbnailUrl    String?         @map("thumbnail_url")
+  durationSeconds Int             @default(0) @map("duration_seconds")
+  fileSize        BigInt          @default(0) @map("file_size")
+  status          RecordingStatus @default(processing)
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  session StreamSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  stream  Stream        @relation(fields: [streamId], references: [id], onDelete: Cascade)
+
+  @@map("recordings")
+}
+
+model AuditLog {
+  id         String          @id @default(uuid())
+  userId     String          @map("user_id")
+  action     AuditAction
+  targetType AuditTargetType @map("target_type")
+  targetId   String          @map("target_id")
+  details    Json?
+  ipAddress  String?         @map("ip_address")
+  createdAt  DateTime        @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
