@@ -58,7 +58,6 @@ export const streamsApi = baseApi.injectEndpoints({
     getLiveStreams: builder.query<ApiResponse<Stream[]>, void>({
       query: () => ({ url: "/streams", params: { status: "live" } }),
       providesTags: [{ type: "Stream", id: "LIVE" }],
-      pollingInterval: POLLING_INTERVALS.STREAMS_LIST,
     }),
   }),
 });

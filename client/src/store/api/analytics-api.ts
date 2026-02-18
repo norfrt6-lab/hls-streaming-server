@@ -39,11 +39,9 @@ export const analyticsApi = baseApi.injectEndpoints({
     }),
     getDashboardMetrics: builder.query<ApiResponse<DashboardMetrics>, void>({
       query: () => "/analytics/dashboard",
-      pollingInterval: POLLING_INTERVALS.ANALYTICS,
     }),
     getHealthCheck: builder.query<ApiResponse<HealthCheck>, void>({
       query: () => "/health",
-      pollingInterval: POLLING_INTERVALS.HEALTH,
     }),
   }),
 });
