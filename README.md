@@ -7,7 +7,7 @@
 ![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-A production-grade live video streaming server with RTMP ingest, FFmpeg adaptive bitrate transcoding, HLS delivery, real-time chat, viewer analytics, VOD recording, and a monitoring stack. Built as a senior capstone project to demonstrate expertise in system design, real-time communication, media processing, and containerized deployment.
+A production-grade live video streaming server with RTMP ingest, FFmpeg adaptive bitrate transcoding, HLS delivery, real-time chat, viewer analytics, VOD recording, and a monitoring stack. Built as a senior project to demonstrate expertise in system design, real-time communication, media processing, and containerized deployment.
 
 ---
 

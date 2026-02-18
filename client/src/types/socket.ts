@@ -69,6 +69,7 @@ export interface ChatErrorPayload {
 }
 
 export interface ChatHistoryPayload {
+  streamId: string;
   messages: ChatMessageReceived[];
 }
 

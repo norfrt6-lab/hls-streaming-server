@@ -55,7 +55,10 @@ type SocketEvent =
   | { type: "stream:viewers"; payload: StreamViewersPayload }
   | { type: "stream:health"; payload: StreamHealthPayload }
   | { type: "chat:history"; payload: ChatHistoryPayload }
-  | { type: "chat:message"; payload: ChatMessageReceived & { streamId: string } }
+  | {
+      type: "chat:message";
+      payload: ChatMessageReceived & { streamId: string };
+    }
   | { type: "chat:deleted"; payload: ChatDeletedPayload & { streamId: string } }
   | { type: "chat:error"; payload: ChatErrorPayload }
   | { type: "dashboard:metrics"; payload: DashboardMetricsPayload }
@@ -68,16 +71,16 @@ function createSocketChannel(socket: Socket): EventChannel<SocketEvent> {
 
     // Stream namespace events
     socket.on("stream:live", (payload: StreamLivePayload) =>
-      emit({ type: "stream:live", payload })
+      emit({ type: "stream:live", payload }),
     );
     socket.on("stream:offline", (payload: StreamOfflinePayload) =>
-      emit({ type: "stream:offline", payload })
+      emit({ type: "stream:offline", payload }),
     );
     socket.on("stream:viewers", (payload: StreamViewersPayload) =>
-      emit({ type: "stream:viewers", payload })
+      emit({ type: "stream:viewers", payload }),
     );
     socket.on("stream:health", (payload: StreamHealthPayload) =>
-      emit({ type: "stream:health", payload })
+      emit({ type: "stream:health", payload }),
     );
 
     return () => {
@@ -96,16 +99,20 @@ function createChatChannel(socket: Socket): EventChannel<SocketEvent> {
     socket.on("connect", () => emit({ type: "connect" }));
     socket.on("disconnect", () => emit({ type: "disconnect" }));
     socket.on("chat:history", (payload: ChatHistoryPayload) =>
-      emit({ type: "chat:history", payload })
+      emit({ type: "chat:history", payload }),
     );
-    socket.on("chat:message", (payload: ChatMessageReceived & { streamId: string }) =>
-      emit({ type: "chat:message", payload })
+    socket.on(
+      "chat:message",
+      (payload: ChatMessageReceived & { streamId: string }) =>
+        emit({ type: "chat:message", payload }),
     );
-    socket.on("chat:deleted", (payload: ChatDeletedPayload & { streamId: string }) =>
-      emit({ type: "chat:deleted", payload })
+    socket.on(
+      "chat:deleted",
+      (payload: ChatDeletedPayload & { streamId: string }) =>
+        emit({ type: "chat:deleted", payload }),
     );
     socket.on("chat:error", (payload: ChatErrorPayload) =>
-      emit({ type: "chat:error", payload })
+      emit({ type: "chat:error", payload }),
     );
 
     return () => {
@@ -124,10 +131,10 @@ function createDashboardChannel(socket: Socket): EventChannel<SocketEvent> {
     socket.on("connect", () => emit({ type: "connect" }));
     socket.on("disconnect", () => emit({ type: "disconnect" }));
     socket.on("dashboard:metrics", (payload: DashboardMetricsPayload) =>
-      emit({ type: "dashboard:metrics", payload })
+      emit({ type: "dashboard:metrics", payload }),
     );
     socket.on("dashboard:stream", (payload: DashboardStreamPayload) =>
-      emit({ type: "dashboard:stream", payload })
+      emit({ type: "dashboard:stream", payload }),
     );
 
     return () => {
@@ -189,7 +196,9 @@ function* handleStreamsSocket(): Generator {
 }
 
 function* handleChatSocket(): Generator {
-  const token = ((yield select((s: RootState) => s.auth.accessToken)) as string) ?? undefined;
+  const token =
+    ((yield select((s: RootState) => s.auth.accessToken)) as string) ??
+    undefined;
   const socket = getOrCreateSocket(SOCKET_NAMESPACES.CHAT, token);
   const channel = createChatChannel(socket) as EventChannel<SocketEvent>;
 
@@ -204,14 +213,19 @@ function* handleChatSocket(): Generator {
           yield put(setConnected({ namespace: "chat", connected: false }));
           break;
         case "chat:history":
-          // History comes with streamId context from the join
+          yield put(
+            setHistory({
+              streamId: event.payload.streamId,
+              messages: event.payload.messages,
+            }),
+          );
           break;
         case "chat:message":
           yield put(
             addMessage({
               streamId: event.payload.streamId,
               message: event.payload,
-            })
+            }),
           );
           break;
         case "chat:deleted":
@@ -219,7 +233,7 @@ function* handleChatSocket(): Generator {
             removeMessage({
               streamId: event.payload.streamId,
               messageId: event.payload.messageId,
-            })
+            }),
           );
           break;
         case "chat:error":
@@ -228,7 +242,7 @@ function* handleChatSocket(): Generator {
               setRateLimited({
                 limited: true,
                 retryAfter: event.payload.retryAfter ?? 1,
-              })
+              }),
             );
           }
           break;
@@ -244,7 +258,9 @@ function* handleChatSocket(): Generator {
 }
 
 function* handleDashboardSocket(): Generator {
-  const token = ((yield select((s: RootState) => s.auth.accessToken)) as string) ?? undefined;
+  const token =
+    ((yield select((s: RootState) => s.auth.accessToken)) as string) ??
+    undefined;
   const socket = getOrCreateSocket(SOCKET_NAMESPACES.DASHBOARD, token);
   const channel = createDashboardChannel(socket) as EventChannel<SocketEvent>;
 
@@ -289,14 +305,20 @@ function* handleDisconnect(): Generator {
   yield put(resetSocket());
 }
 
-function* handleJoinStream(action: { type: string; payload: string }): Generator {
+function* handleJoinStream(action: {
+  type: string;
+  payload: string;
+}): Generator {
   const socket = sockets[SOCKET_NAMESPACES.STREAMS];
   if (socket?.connected) {
     socket.emit("stream:join", { streamId: action.payload });
   }
 }
 
-function* handleLeaveStream(action: { type: string; payload: string }): Generator {
+function* handleLeaveStream(action: {
+  type: string;
+  payload: string;
+}): Generator {
   const socket = sockets[SOCKET_NAMESPACES.STREAMS];
   if (socket?.connected) {
     socket.emit("stream:leave", { streamId: action.payload });
@@ -308,31 +330,33 @@ function* handleJoinChat(action: { type: string; payload: string }): Generator {
   const socket = sockets[SOCKET_NAMESPACES.CHAT];
   if (socket?.connected) {
     socket.emit("chat:join", { streamId: action.payload });
-
-    // Listen for history response for this specific room
-    socket.once("chat:history", (payload: { messages: ChatMessageReceived[] }) => {
-      // Dispatch is handled through the channel, but we also set history directly
-    });
   }
 }
 
-function* handleLeaveChat(action: { type: string; payload: string }): Generator {
+function* handleLeaveChat(action: {
+  type: string;
+  payload: string;
+}): Generator {
   const socket = sockets[SOCKET_NAMESPACES.CHAT];
   if (socket?.connected) {
     socket.emit("chat:leave", { streamId: action.payload });
   }
 }
 
-function* handleSendChatMessage(
-  action: { type: string; payload: { streamId: string; content: string } }
-): Generator {
+function* handleSendChatMessage(action: {
+  type: string;
+  payload: { streamId: string; content: string };
+}): Generator {
   const socket = sockets[SOCKET_NAMESPACES.CHAT];
   if (socket?.connected) {
     socket.emit("chat:message", action.payload);
   }
 }
 
-function* handleSendTyping(action: { type: string; payload: string }): Generator {
+function* handleSendTyping(action: {
+  type: string;
+  payload: string;
+}): Generator {
   const socket = sockets[SOCKET_NAMESPACES.CHAT];
   if (socket?.connected) {
     socket.emit("chat:typing", { streamId: action.payload });

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
+import dynamic from "next/dynamic";
 import { Calendar, Tag } from "lucide-react";
 import { SOCKET_JOIN_STREAM, SOCKET_LEAVE_STREAM } from "@/types/socket";
 import { useGetStreamQuery } from "@/store/api/streams-api";
@@ -10,13 +11,23 @@ import { selectCurrentUser } from "@/store/slices/auth-slice";
 import { resetPlayer } from "@/store/slices/player-slice";
 import { formatRelativeTime } from "@/lib/utils";
 import { STREAM_STATUS_LABELS } from "@/lib/constants";
-import { HlsPlayer } from "@/components/player/hls-player";
 import { PlayerControls } from "@/components/player/player-controls";
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { StreamSettings } from "@/components/streams/stream-settings";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const HlsPlayer = dynamic(
+  () =>
+    import("@/components/player/hls-player").then((m) => ({
+      default: m.HlsPlayer,
+    })),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="aspect-video w-full rounded-xl" />,
+  },
+);
 
 export default function StreamDetailPage() {
   const params = useParams();
