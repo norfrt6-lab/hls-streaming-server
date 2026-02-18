@@ -53,6 +53,7 @@ docker-compose.override.yml
 uploads/
 recordings/
 hls-output/
+media/
 
 # Monitoring data
 prometheus-data/
