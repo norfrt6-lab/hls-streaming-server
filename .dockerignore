@@ -1,0 +1,13 @@
+node_modules
+dist
+.next
+.git
+.env
+.env.*
+media
+client
+coverage
+*.md
+.claude
+.vscode
+.idea

@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { authenticate, authorize } from "../auth/auth.middleware";
+import { validate } from "../../common/middleware/validate";
+import { createStreamSchema, updateStreamSchema } from "./streams.validator";
 import {
   listHandler,
   getHandler,
@@ -18,8 +20,14 @@ router.get("/", listHandler);
 router.get("/:id", getHandler);
 
 // Authenticated
-router.post("/", authenticate, authorize("admin", "streamer"), createHandler);
-router.patch("/:id", authenticate, updateHandler);
+router.post(
+  "/",
+  authenticate,
+  authorize("admin", "streamer"),
+  validate(createStreamSchema),
+  createHandler,
+);
+router.patch("/:id", authenticate, validate(updateStreamSchema), updateHandler);
 router.delete("/:id", authenticate, deleteHandler);
 router.get("/:id/key", authenticate, getKeyHandler);
 router.post("/:id/key", authenticate, regenerateKeyHandler);

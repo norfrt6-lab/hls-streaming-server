@@ -1,11 +1,42 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { StatsCards } from "@/components/dashboard/stats-cards";
-import { ViewerChart } from "@/components/dashboard/viewer-chart";
 import { StreamTable } from "@/components/dashboard/stream-table";
-import { SystemMetrics } from "@/components/dashboard/system-metrics";
-import { BandwidthChart } from "@/components/dashboard/bandwidth-chart";
-import { RecentActivity } from "@/components/dashboard/recent-activity";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const ChartSkeleton = () => (
+  <Skeleton className="h-[300px] w-full rounded-lg" />
+);
+
+const ViewerChart = dynamic(
+  () =>
+    import("@/components/dashboard/viewer-chart").then((m) => ({
+      default: m.ViewerChart,
+    })),
+  { loading: ChartSkeleton },
+);
+const BandwidthChart = dynamic(
+  () =>
+    import("@/components/dashboard/bandwidth-chart").then((m) => ({
+      default: m.BandwidthChart,
+    })),
+  { loading: ChartSkeleton },
+);
+const SystemMetrics = dynamic(
+  () =>
+    import("@/components/dashboard/system-metrics").then((m) => ({
+      default: m.SystemMetrics,
+    })),
+  { loading: ChartSkeleton },
+);
+const RecentActivity = dynamic(
+  () =>
+    import("@/components/dashboard/recent-activity").then((m) => ({
+      default: m.RecentActivity,
+    })),
+  { loading: ChartSkeleton },
+);
 
 export default function DashboardPage() {
   return (

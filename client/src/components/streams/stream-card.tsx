@@ -1,6 +1,8 @@
 "use client";
 
+import { memo } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@/lib/utils";
@@ -12,7 +14,9 @@ interface StreamCardProps {
   stream: Stream;
 }
 
-export function StreamCard({ stream }: StreamCardProps) {
+export const StreamCard = memo(function StreamCard({
+  stream,
+}: StreamCardProps) {
   const router = useRouter();
 
   const displayName =
@@ -26,10 +30,12 @@ export function StreamCard({ stream }: StreamCardProps) {
       {/* Thumbnail */}
       <div className="relative aspect-video w-full overflow-hidden">
         {stream.thumbnailUrl ? (
-          <img
+          <Image
             src={stream.thumbnailUrl}
             alt={stream.title}
-            className="h-full w-full object-cover"
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (
           <div className="h-full w-full bg-gradient-to-br from-purple-600 via-blue-600 to-cyan-500" />
@@ -53,10 +59,7 @@ export function StreamCard({ stream }: StreamCardProps) {
 
       {/* Info */}
       <CardContent className="p-3">
-        <h3
-          className="line-clamp-1 text-sm font-semibold"
-          title={stream.title}
-        >
+        <h3 className="line-clamp-1 text-sm font-semibold" title={stream.title}>
           {stream.title}
         </h3>
         <p className="mt-0.5 text-xs text-muted-foreground">{displayName}</p>
@@ -68,4 +71,4 @@ export function StreamCard({ stream }: StreamCardProps) {
       </CardContent>
     </Card>
   );
-}
+});

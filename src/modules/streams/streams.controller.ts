@@ -1,8 +1,6 @@
 import type { Response, NextFunction } from "express";
 import * as streamsService from "./streams.service";
-import { createStreamSchema, updateStreamSchema } from "./streams.validator";
 import { sendSuccess, paginate } from "../../common/utils/response";
-import { AppError } from "../../common/utils/errors";
 import type { AuthRequest } from "../auth/auth.middleware";
 
 export async function listHandler(
@@ -47,12 +45,9 @@ export async function createHandler(
   next: NextFunction,
 ) {
   try {
-    const input = createStreamSchema.parse(req.body);
-    const stream = await streamsService.createStream(req.userId!, input);
+    const stream = await streamsService.createStream(req.userId!, req.body);
     sendSuccess(res, stream, 201);
-  } catch (err: any) {
-    if (err.name === "ZodError")
-      return next(AppError.badRequest(err.errors[0]?.message));
+  } catch (err) {
     next(err);
   }
 }
@@ -63,17 +58,14 @@ export async function updateHandler(
   next: NextFunction,
 ) {
   try {
-    const input = updateStreamSchema.parse(req.body);
     const stream = await streamsService.updateStream(
       req.params.id as string,
       req.userId!,
       req.userRole!,
-      input,
+      req.body,
     );
     sendSuccess(res, stream);
-  } catch (err: any) {
-    if (err.name === "ZodError")
-      return next(AppError.badRequest(err.errors[0]?.message));
+  } catch (err) {
     next(err);
   }
 }

@@ -1,6 +1,8 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Clock, Film } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDuration, formatBytes, formatRelativeTime } from "@/lib/utils";
@@ -10,16 +12,18 @@ interface VodCardProps {
   recording: Recording;
 }
 
-export function VodCard({ recording }: VodCardProps) {
+export const VodCard = memo(function VodCard({ recording }: VodCardProps) {
   return (
     <Link href={`/vod/${recording.id}`}>
       <Card className="overflow-hidden transition-colors hover:bg-accent/50">
         <div className="relative aspect-video bg-muted">
           {recording.thumbnailUrl ? (
-            <img
+            <Image
               src={recording.thumbnailUrl}
               alt={recording.title}
-              className="h-full w-full object-cover"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           ) : (
             <div className="flex h-full items-center justify-center">
@@ -33,7 +37,11 @@ export function VodCard({ recording }: VodCardProps) {
         <CardContent className="p-3">
           <h3 className="truncate text-sm font-medium">{recording.title}</h3>
           <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-            <span>{recording.stream?.user?.displayName ?? recording.stream?.title ?? "Unknown"}</span>
+            <span>
+              {recording.stream?.user?.displayName ??
+                recording.stream?.title ??
+                "Unknown"}
+            </span>
             <span className="text-border">|</span>
             <span>{formatBytes(recording.fileSize)}</span>
           </div>
@@ -45,4 +53,4 @@ export function VodCard({ recording }: VodCardProps) {
       </Card>
     </Link>
   );
-}
+});
