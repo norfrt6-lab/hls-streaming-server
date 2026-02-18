@@ -11,7 +11,10 @@
     "prisma:migrate": "prisma migrate dev --schema=src/database/prisma/schema.prisma",
     "prisma:deploy": "prisma migrate deploy --schema=src/database/prisma/schema.prisma",
     "prisma:seed": "tsx src/database/prisma/seed.ts",
-    "prisma:studio": "prisma studio --schema=src/database/prisma/schema.prisma"
+    "prisma:studio": "prisma studio --schema=src/database/prisma/schema.prisma",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "prisma": {
     "seed": "tsx src/database/prisma/seed.ts"
@@ -42,8 +45,10 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.10.0",
     "@types/uuid": "^10.0.0",
+    "@vitest/coverage-v8": "^4.0.18",
     "prisma": "^5.22.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.18"
   }
 }
