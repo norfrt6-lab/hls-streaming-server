@@ -6,10 +6,28 @@ import { logger } from "../../common/utils/logger";
 const VIEWERS_KEY = (streamId: string) => `viewers:${streamId}`;
 const PEAK_KEY = (streamId: string) => `viewers:peak:${streamId}`;
 
+async function decrementViewers(streamsNsp: Namespace, streamId: string) {
+  const count = await redis.decr(VIEWERS_KEY(streamId));
+  const safeCount = Math.max(0, count);
+  if (count < 0) await redis.set(VIEWERS_KEY(streamId), 0);
+
+  const peak = parseInt((await redis.get(PEAK_KEY(streamId))) ?? "0", 10);
+
+  streamsNsp.to(`stream:${streamId}`).emit("stream:viewers", {
+    streamId,
+    count: safeCount,
+    peak,
+  });
+}
+
 export function setupStreamsNamespace(streamsNsp: Namespace) {
   streamsNsp.on("connection", (socket: Socket) => {
+    // Track which streams this socket is viewing
+    const joinedStreams = new Set<string>();
+
     socket.on("stream:join", async ({ streamId }: { streamId: string }) => {
       socket.join(`stream:${streamId}`);
+      joinedStreams.add(streamId);
 
       // Increment viewer count
       const count = await redis.incr(VIEWERS_KEY(streamId));
@@ -28,30 +46,32 @@ export function setupStreamsNamespace(streamsNsp: Namespace) {
 
     socket.on("stream:leave", async ({ streamId }: { streamId: string }) => {
       socket.leave(`stream:${streamId}`);
-
-      const count = await redis.decr(VIEWERS_KEY(streamId));
-      const safeCount = Math.max(0, count);
-      if (count < 0) await redis.set(VIEWERS_KEY(streamId), 0);
-
-      const peak = parseInt((await redis.get(PEAK_KEY(streamId))) ?? "0", 10);
-
-      streamsNsp.to(`stream:${streamId}`).emit("stream:viewers", {
-        streamId,
-        count: safeCount,
-        peak,
-      });
+      joinedStreams.delete(streamId);
+      await decrementViewers(streamsNsp, streamId);
     });
 
-    socket.on("disconnect", () => {
-      // Socket.IO handles room cleanup automatically
-      logger.debug({ socketId: socket.id }, "Viewer disconnected from streams namespace");
+    socket.on("disconnect", async () => {
+      // Decrement viewer count for all streams this socket was watching
+      for (const streamId of joinedStreams) {
+        await decrementViewers(streamsNsp, streamId);
+      }
+      joinedStreams.clear();
+      logger.debug(
+        { socketId: socket.id },
+        "Viewer disconnected from streams namespace",
+      );
     });
   });
 }
 
 export async function emitStreamLive(
   streamsNsp: Namespace,
-  data: { streamId: string; title: string; streamer: string; thumbnail: string | null },
+  data: {
+    streamId: string;
+    title: string;
+    streamer: string;
+    thumbnail: string | null;
+  },
 ) {
   // Reset viewer counts
   await redis.set(VIEWERS_KEY(data.streamId), 0);
@@ -59,7 +79,10 @@ export async function emitStreamLive(
   streamsNsp.emit("stream:live", data);
 }
 
-export async function emitStreamOffline(streamsNsp: Namespace, streamId: string) {
+export async function emitStreamOffline(
+  streamsNsp: Namespace,
+  streamId: string,
+) {
   await redis.del(VIEWERS_KEY(streamId));
   await redis.del(PEAK_KEY(streamId));
   streamsNsp.emit("stream:offline", { streamId });

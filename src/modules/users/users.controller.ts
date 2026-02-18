@@ -1,9 +1,6 @@
 import type { Response, NextFunction } from "express";
 import * as usersService from "./users.service";
-import { updateUserSchema, updateRoleSchema } from "./users.validator";
-import { sendSuccess } from "../../common/utils/response";
-import { paginate } from "../../common/utils/response";
-import { AppError } from "../../common/utils/errors";
+import { sendSuccess, paginate } from "../../common/utils/response";
 import type { AuthRequest } from "../auth/auth.middleware";
 
 export async function listHandler(
@@ -48,12 +45,12 @@ export async function updateHandler(
   next: NextFunction,
 ) {
   try {
-    const input = updateUserSchema.parse(req.body);
-    const user = await usersService.updateUser(req.params.id as string, input);
+    const user = await usersService.updateUser(
+      req.params.id as string,
+      req.body,
+    );
     sendSuccess(res, user);
-  } catch (err: any) {
-    if (err.name === "ZodError")
-      return next(AppError.badRequest(err.errors[0]?.message));
+  } catch (err) {
     next(err);
   }
 }
@@ -77,12 +74,12 @@ export async function updateRoleHandler(
   next: NextFunction,
 ) {
   try {
-    const input = updateRoleSchema.parse(req.body);
-    const user = await usersService.updateRole(req.params.id as string, input);
+    const user = await usersService.updateRole(
+      req.params.id as string,
+      req.body,
+    );
     sendSuccess(res, user);
-  } catch (err: any) {
-    if (err.name === "ZodError")
-      return next(AppError.badRequest(err.errors[0]?.message));
+  } catch (err) {
     next(err);
   }
 }

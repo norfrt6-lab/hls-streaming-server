@@ -1,50 +1,53 @@
 import type { Request, Response, NextFunction } from "express";
 import * as authService from "./auth.service";
-import { loginSchema, registerSchema, refreshSchema } from "./auth.validator";
 import { sendSuccess } from "../../common/utils/response";
 import { AppError } from "../../common/utils/errors";
 import type { AuthRequest } from "./auth.middleware";
 
-export async function registerHandler(req: Request, res: Response, next: NextFunction) {
+export async function registerHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
-    const input = registerSchema.parse(req.body);
-    const result = await authService.register(input);
+    const result = await authService.register(req.body);
     sendSuccess(res, result, 201);
-  } catch (err: any) {
-    if (err.name === "ZodError") {
-      return next(AppError.badRequest(err.errors[0]?.message ?? "Validation error"));
-    }
+  } catch (err) {
     next(err);
   }
 }
 
-export async function loginHandler(req: Request, res: Response, next: NextFunction) {
+export async function loginHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
-    const input = loginSchema.parse(req.body);
-    const result = await authService.login(input);
+    const result = await authService.login(req.body);
     sendSuccess(res, result);
-  } catch (err: any) {
-    if (err.name === "ZodError") {
-      return next(AppError.badRequest(err.errors[0]?.message ?? "Validation error"));
-    }
+  } catch (err) {
     next(err);
   }
 }
 
-export async function refreshHandler(req: Request, res: Response, next: NextFunction) {
+export async function refreshHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
-    const input = refreshSchema.parse(req.body);
-    const result = await authService.refresh(input.refreshToken);
+    const result = await authService.refresh(req.body.refreshToken);
     sendSuccess(res, result);
-  } catch (err: any) {
-    if (err.name === "ZodError") {
-      return next(AppError.badRequest(err.errors[0]?.message ?? "Validation error"));
-    }
+  } catch (err) {
     next(err);
   }
 }
 
-export async function logoutHandler(req: Request, res: Response, next: NextFunction) {
+export async function logoutHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
     const { refreshToken } = req.body;
     if (refreshToken) {
@@ -56,7 +59,11 @@ export async function logoutHandler(req: Request, res: Response, next: NextFunct
   }
 }
 
-export async function getMeHandler(req: AuthRequest, res: Response, next: NextFunction) {
+export async function getMeHandler(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) {
   try {
     if (!req.userId) return next(AppError.unauthorized());
     const user = await authService.getMe(req.userId);

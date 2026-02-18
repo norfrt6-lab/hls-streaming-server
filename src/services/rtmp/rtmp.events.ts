@@ -1,9 +1,15 @@
 import { prisma } from "../../config/database";
 import { logger } from "../../common/utils/logger";
 import { getIO } from "../websocket/socket.server";
-import { emitStreamLive, emitStreamOffline } from "../websocket/streams.namespace";
+import {
+  emitStreamLive,
+  emitStreamOffline,
+} from "../websocket/streams.namespace";
 import { startTranscoding, stopTranscoding } from "../transcoding/transcoder";
-import { startThumbnailCapture, stopThumbnailCapture } from "../../modules/thumbnails/thumbnails.service";
+import {
+  startThumbnailCapture,
+  stopThumbnailCapture,
+} from "../../modules/thumbnails/thumbnails.service";
 import { config } from "../../config";
 import path from "path";
 import fs from "fs";
@@ -11,17 +17,17 @@ import fs from "fs";
 export async function onStreamPublish(streamId: string, streamKey: string) {
   logger.info({ streamId }, "Stream published");
 
-  // Update stream status
-  const stream = await prisma.stream.update({
-    where: { id: streamId },
-    data: { status: "live", startedAt: new Date() },
-    include: { user: { select: { username: true, displayName: true } } },
-  });
-
-  // Create a new session
-  await prisma.streamSession.create({
-    data: { streamId, status: "live" },
-  });
+  // Update stream status + create session atomically
+  const [stream] = await prisma.$transaction([
+    prisma.stream.update({
+      where: { id: streamId },
+      data: { status: "live", startedAt: new Date() },
+      include: { user: { select: { username: true, displayName: true } } },
+    }),
+    prisma.streamSession.create({
+      data: { streamId, status: "live" },
+    }),
+  ]);
 
   // Ensure media directory exists
   const mediaDir = path.join(config.media.root, "live", streamId);
@@ -53,29 +59,32 @@ export async function onStreamUnpublish(streamId: string) {
   stopTranscoding(streamId);
   stopThumbnailCapture(streamId);
 
-  // Update stream status
-  await prisma.stream.update({
-    where: { id: streamId },
-    data: { status: "offline", endedAt: new Date() },
-  });
-
-  // End the active session
-  const session = await prisma.streamSession.findFirst({
-    where: { streamId, status: "live" },
-    orderBy: { startedAt: "desc" },
-  });
-
-  if (session) {
-    const duration = Math.floor((Date.now() - session.startedAt.getTime()) / 1000);
-    await prisma.streamSession.update({
-      where: { id: session.id },
-      data: {
-        status: "ended",
-        endedAt: new Date(),
-        durationSeconds: duration,
-      },
+  // Update stream status + end session atomically
+  await prisma.$transaction(async (tx) => {
+    await tx.stream.update({
+      where: { id: streamId },
+      data: { status: "offline", endedAt: new Date() },
     });
-  }
+
+    const session = await tx.streamSession.findFirst({
+      where: { streamId, status: "live" },
+      orderBy: { startedAt: "desc" },
+    });
+
+    if (session) {
+      const duration = Math.floor(
+        (Date.now() - session.startedAt.getTime()) / 1000,
+      );
+      await tx.streamSession.update({
+        where: { id: session.id },
+        data: {
+          status: "ended",
+          endedAt: new Date(),
+          durationSeconds: duration,
+        },
+      });
+    }
+  });
 
   // Notify viewers
   const io = getIO();
