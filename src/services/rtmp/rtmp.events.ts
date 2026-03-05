@@ -1,4 +1,5 @@
 import { prisma } from "../../config/database";
+import type { Prisma } from "@prisma/client";
 import { logger } from "../../common/utils/logger";
 import { getIO } from "../websocket/socket.server";
 import { emitStreamLive, emitStreamOffline } from "../websocket/streams.namespace";
@@ -77,7 +78,7 @@ export async function onStreamUnpublish(streamId: string) {
   activeTranscodersGauge.set(getActiveTranscodings().length);
 
   // Update stream status + end session atomically
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     await tx.stream.update({
       where: { id: streamId },
       data: { status: "offline", endedAt: new Date() },
