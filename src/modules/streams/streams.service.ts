@@ -8,6 +8,7 @@ import { disconnectRtmpSession } from "../../services/rtmp/rtmp.server";
 import { getIO } from "../../services/websocket/socket.server";
 import { emitStreamOffline } from "../../services/websocket/streams.namespace";
 import { prisma } from "../../config/database";
+import type { Prisma } from "@prisma/client";
 import type { CreateStreamInput, UpdateStreamInput } from "./streams.validator";
 
 function stripStreamKey(stream: any) {
@@ -107,7 +108,7 @@ export async function forceStopStream(id: string, adminId?: string) {
   stopThumbnailCapture(id);
 
   // Update stream status + end session atomically
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     await tx.stream.update({
       where: { id },
       data: { status: "offline", endedAt: new Date() },

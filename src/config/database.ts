@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 import { logger } from "../common/utils/logger";
 
 const prisma = new PrismaClient({
@@ -8,11 +8,11 @@ const prisma = new PrismaClient({
   ],
 });
 
-prisma.$on("error", (e) => {
+prisma.$on("error", (e: Prisma.LogEvent) => {
   logger.error({ err: e }, "Prisma error");
 });
 
-prisma.$on("warn", (e) => {
+prisma.$on("warn", (e: Prisma.LogEvent) => {
   logger.warn({ err: e }, "Prisma warning");
 });
 
