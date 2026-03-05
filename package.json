@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
+    "build": "prisma generate --schema=src/database/prisma/schema.prisma && tsc",
     "start": "node dist/server.js",
     "lint": "eslint src/",
     "format": "prettier --write \"src/**/*.ts\"",
