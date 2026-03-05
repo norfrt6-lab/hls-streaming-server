@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HLS Streaming Server - Production-Grade Live Video Platform</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --purple: #bc8cff;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 80px 0 60px;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(88,166,255,0.1);
+      color: var(--accent);
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 20px;
+      border: 1px solid rgba(88,166,255,0.2);
+    }
+    .hero h1 {
+      font-size: 42px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      letter-spacing: -0.5px;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero p {
+      font-size: 18px;
+      color: var(--text-muted);
+      max-width: 640px;
+      margin: 0 auto 32px;
+    }
+    .hero-links { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+
+    /* Stats row */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+      padding: 40px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .stat {
+      text-align: center;
+      padding: 16px;
+      background: var(--surface);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .stat-value { font-size: 28px; font-weight: 700; color: var(--accent); }
+    .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+    /* Section */
+    section { padding: 48px 0; border-bottom: 1px solid var(--border); }
+    section:last-child { border-bottom: none; }
+    h2 {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      letter-spacing: -0.3px;
+    }
+    h2 .dot { color: var(--accent); }
+
+    /* Architecture flow */
+    .arch-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .arch-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .arch-arrow { color: var(--text-muted); font-size: 18px; }
+
+    /* Pipeline */
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .pipeline-step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .pipeline-step .step-num {
+      display: inline-block;
+      background: rgba(88,166,255,0.15);
+      color: var(--accent);
+      width: 28px;
+      height: 28px;
+      line-height: 28px;
+      text-align: center;
+      border-radius: 50%;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .pipeline-step h3 { font-size: 15px; margin-bottom: 6px; }
+    .pipeline-step p { font-size: 13px; color: var(--text-muted); }
+
+    /* Features grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .feature-card h3 { font-size: 15px; margin-bottom: 8px; }
+    .feature-card p { font-size: 13px; color: var(--text-muted); }
+    .feature-icon {
+      font-size: 20px;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    th, td { padding: 12px 16px; text-align: left; font-size: 14px; }
+    th {
+      background: rgba(88,166,255,0.08);
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    td { border-top: 1px solid var(--border); }
+
+    /* Tags */
+    .tags { display: flex; gap: 10px; flex-wrap: wrap; }
+    .tag {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 28px; }
+      .hero p { font-size: 16px; }
+      .pipeline { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header class="hero">
+    <div class="hero-badge">Node.js + TypeScript + FFmpeg + Docker</div>
+    <h1>HLS Streaming <span>Server</span></h1>
+    <p>Production-grade live video platform with RTMP ingest, adaptive bitrate transcoding, real-time chat, viewer analytics, VOD recording, and a full monitoring stack.</p>
+    <div class="hero-links">
+      <a href="https://github.com/norfrt6-lab/hls-streaming-server" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        View Source
+      </a>
+      <a href="#features" class="btn btn-secondary">See Features</a>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value">6</div>
+      <div class="stat-label">Docker Services</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">4</div>
+      <div class="stat-label">ABR Quality Levels</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">25+</div>
+      <div class="stat-label">REST Endpoints</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">3</div>
+      <div class="stat-label">User Roles</div>
+    </div>
+  </div>
+
+  <section>
+    <h2>System Architecture<span class="dot">.</span></h2>
+    <div class="arch-row">
+      <div class="arch-box">OBS / Encoder</div>
+      <span class="arch-arrow">&rarr;</span>
+      <div class="arch-box">RTMP Ingest</div>
+      <span class="arch-arrow">&rarr;</span>
+      <div class="arch-box">FFmpeg ABR</div>
+      <span class="arch-arrow">&rarr;</span>
+      <div class="arch-box">HLS Segments</div>
+      <span class="arch-arrow">&rarr;</span>
+      <div class="arch-box">Nginx CDN</div>
+      <span class="arch-arrow">&rarr;</span>
+      <div class="arch-box">Browser / Mobile</div>
+    </div>
+    <div class="pipeline">
+      <div class="pipeline-step">
+        <span class="step-num">1</span>
+        <h3>RTMP Ingest</h3>
+        <p>Accepts RTMP streams on port 1935 with stream key authentication and lifecycle hooks.</p>
+      </div>
+      <div class="pipeline-step">
+        <span class="step-num">2</span>
+        <h3>FFmpeg Transcoding</h3>
+        <p>Adaptive bitrate ladder: 1080p, 720p, 480p, 360p with configurable presets and codec options.</p>
+      </div>
+      <div class="pipeline-step">
+        <span class="step-num">3</span>
+        <h3>HLS Packaging</h3>
+        <p>Master playlist with variant streams, 6-second segments, 10-segment sliding window.</p>
+      </div>
+      <div class="pipeline-step">
+        <span class="step-num">4</span>
+        <h3>Real-Time Chat</h3>
+        <p>Socket.IO rooms per stream, message persistence, moderation (ban/mute/delete), slow mode.</p>
+      </div>
+      <div class="pipeline-step">
+        <span class="step-num">5</span>
+        <h3>Analytics Engine</h3>
+        <p>Real-time viewer counts, peak/total viewers per session, stream health metrics (bitrate, FPS).</p>
+      </div>
+      <div class="pipeline-step">
+        <span class="step-num">6</span>
+        <h3>VOD Recording</h3>
+        <p>Automatic stream archival to MP4, HLS VOD playlists, thumbnail sprite sheets via BullMQ jobs.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <h2>Key Features<span class="dot">.</span></h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">&#x1f3ac;</span>
+        <h3>Adaptive Bitrate Streaming</h3>
+        <p>FFmpeg transcodes to 4 quality levels with HLS master playlists. Viewers automatically switch quality based on bandwidth.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">&#x1f512;</span>
+        <h3>Authentication &amp; Authorization</h3>
+        <p>JWT access + refresh tokens, bcrypt password hashing, role-based access control (admin, streamer, viewer), stream key rotation.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">&#x1f4ac;</span>
+        <h3>Live Chat System</h3>
+        <p>Room-per-stream architecture via Socket.IO with message persistence, rate limiting, and full moderation tools.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">&#x1f4ca;</span>
+        <h3>Analytics Dashboard</h3>
+        <p>Real-time viewer counts, session history, stream health metrics, and server-wide statistics with React admin UI.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">&#x1f3a5;</span>
+        <h3>Video on Demand</h3>
+        <p>Automatic stream archival, MP4 conversion, HLS VOD playlists, and thumbnail generation via background job queue.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">&#x1f6e1;</span>
+        <h3>Monitoring Stack</h3>
+        <p>Prometheus metrics collection, Grafana dashboards, health check endpoints, and custom streaming gauges.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>API Overview<span class="dot">.</span></h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Module</th>
+            <th>Endpoints</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Authentication</td>
+            <td>5</td>
+            <td>Register, login, refresh, logout, current user</td>
+          </tr>
+          <tr>
+            <td>Streams</td>
+            <td>7</td>
+            <td>CRUD, stream key management, force stop</td>
+          </tr>
+          <tr>
+            <td>Chat</td>
+            <td>4</td>
+            <td>Messages, ban/unban, delete messages</td>
+          </tr>
+          <tr>
+            <td>Analytics</td>
+            <td>4</td>
+            <td>Stream summary, viewers, sessions, dashboard</td>
+          </tr>
+          <tr>
+            <td>VOD</td>
+            <td>4</td>
+            <td>List, details, delete, HLS manifest</td>
+          </tr>
+          <tr>
+            <td>Infrastructure</td>
+            <td>2</td>
+            <td>Health check, Prometheus metrics</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Tech Stack<span class="dot">.</span></h2>
+    <div class="tags">
+      <span class="tag">Node.js 20</span>
+      <span class="tag">TypeScript 5</span>
+      <span class="tag">Express.js</span>
+      <span class="tag">FFmpeg 6</span>
+      <span class="tag">Socket.IO</span>
+      <span class="tag">Prisma 5</span>
+      <span class="tag">PostgreSQL 16</span>
+      <span class="tag">Redis 7</span>
+      <span class="tag">Docker Compose</span>
+      <span class="tag">Nginx</span>
+      <span class="tag">Prometheus</span>
+      <span class="tag">Grafana</span>
+      <span class="tag">Next.js 15</span>
+      <span class="tag">Redux Toolkit</span>
+      <span class="tag">HLS.js</span>
+      <span class="tag">BullMQ</span>
+      <span class="tag">Zod</span>
+      <span class="tag">Pino</span>
+      <span class="tag">GitHub Actions</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Infrastructure<span class="dot">.</span></h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">&#x1f433;</span>
+        <h3>Docker Compose Stack</h3>
+        <p>6-service orchestration: Node.js app, PostgreSQL, Redis, Nginx reverse proxy, Prometheus, and Grafana. One command to start everything.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">&#x1f310;</span>
+        <h3>Nginx Reverse Proxy</h3>
+        <p>TLS termination, static HLS file serving, WebSocket proxying, and rate limiting at the edge.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">&#x2699;</span>
+        <h3>CI/CD Pipeline</h3>
+        <p>GitHub Actions workflows for automated linting, type checking, testing, and Docker image builds on every push.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Built by <a href="https://github.com/norfrt6-lab">norfrt6-lab</a> &middot; <a href="https://github.com/norfrt6-lab/hls-streaming-server">Source on GitHub</a></p>
+  </footer>
+</div>
+
+</body>
+</html>
